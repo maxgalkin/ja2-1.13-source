@@ -1899,6 +1899,18 @@ BOOLEAN TacticalCopySoldierFromCreateStruct( SOLDIERTYPE *pSoldier, SOLDIERCREAT
 			pSoldier->usSoldierFlagMask2 |= SOLDIER_TURNCOAT;
 		}
 	}
+
+	// ja2mod: route a share of the enemy elites to the neural policy factory. The tag is
+	// nothing but a bAIIndex, which the modularized AI maps to a factory through AI.ini and
+	// which savegames already carry, so no other part of the engine has to know about it.
+	// This is the temporary way of selecting policy-driven soldiers, until they become a
+	// soldier class of their own.
+	if ( pCreateStruct->bTeam == ENEMY_TEAM && pSoldier->ubSoldierClass == SOLDIER_CLASS_ELITE &&
+		 gGameExternalOptions.ubNeuralEliteFraction > 0 &&
+		 Random( 100 ) < gGameExternalOptions.ubNeuralEliteFraction )
+	{
+		pSoldier->bAIIndex = NEURAL_AI_INDEX;
+	}
 	
 	// SANDRO - If neither of these two options are activated, use the original code
 	// however, "no traits" means no traits at all, so commented out

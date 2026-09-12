@@ -10,6 +10,12 @@
 
 #define				GAME_INI_FILE					"Ja2.ini"
 
+// ja2mod: the bAIIndex that routes a soldier to NeuralPlanFactory. It must match the
+// Factory_<n> slot the mod's AI.ini patch declares; the engine throws std::out_of_range
+// inside the AI turn when the slot is missing, so the executable and AI.ini have to be
+// deployed together.
+#define				NEURAL_AI_INDEX					11
+
 //If you add any options, MAKE sure you add the corresponding string to the Options Screen string array.
 //	 look up : zOptionsScreenHelpText , zOptionsToggleText
 //Also, define its initialization and add its load/save to INI lines in : InitGameSettings() , SaveGameSettings() , LoadGameSettings()
@@ -1552,6 +1558,10 @@ typedef struct
 	UINT16	usEnemyGeneralsBodyGuardsNumber;
 	FLOAT	fEnemyGeneralStrategicDecisionSpeedBonus;
 	FLOAT	fEnemyGeneralStrategicMovementSpeedBonus;
+
+	// ja2mod: percentage of enemy elites routed to the neural policy factory.
+	// Zero, the default, leaves every soldier on the legacy AI.
+	UINT8	ubNeuralEliteFraction;
 
 	// Flugente: individual militia
 	BOOLEAN fIndividualMilitia;

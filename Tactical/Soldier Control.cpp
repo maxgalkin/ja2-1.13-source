@@ -2581,6 +2581,16 @@ BOOLEAN SOLDIERTYPE::DeleteSoldier( void )
 			}
 		}
 
+		// ja2mod: drop the modularized AI plan. The destructor deletes it as well, but a
+		// soldier slot is reused without ever being destructed, so a plan left here would
+		// leak and, worse, the next soldier in the slot would inherit a plan built for the
+		// previous one's bAIIndex.
+		if ( this->ai_masterplan_ )
+		{
+			delete this->ai_masterplan_;
+			this->ai_masterplan_ = NULL;
+		}
+
 		// Delete key ring
 		if ( this->pKeyRing )
 		{

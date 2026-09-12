@@ -7,6 +7,7 @@
 #include "../include/PlanFactoryLibrary.h"
 #include "../include/NullPlanFactory.h"
 #include "../include/LegacyAIPlanFactory.h"
+#include "../include/NeuralPlanFactory.h"
 
 
 #include "../../Utils/INIReader.h"
@@ -37,6 +38,7 @@ namespace AI
 
             registred_factories_[NullPlanFactory::get_name()] = new NullPlanFactory();
             registred_factories_[LegacyAIPlanFactory::get_name()] = new LegacyAIPlanFactory();
+            registred_factories_[NeuralPlanFactory::get_name()] = new NeuralPlanFactory();
 
             // XXX ^^ Add new factory registrations here ^^ XXX
             // ================================================================================

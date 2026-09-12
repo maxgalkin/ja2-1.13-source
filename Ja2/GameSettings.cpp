@@ -1797,6 +1797,10 @@ void LoadGameExternalOptions()
 	gGameExternalOptions.fEnemyGeneralStrategicDecisionSpeedBonus = iniReader.ReadFloat( "Tactical Enemy Role Settings", "ENEMY_GENERALS_STRATEGIC_DECISION_SPEEDBONUS", 0.05f, 0.00f, 0.1f );
 	gGameExternalOptions.fEnemyGeneralStrategicMovementSpeedBonus = iniReader.ReadFloat( "Tactical Enemy Role Settings", "ENEMY_GENERALS_STRATEGIC_MOVEMENT_SPEEDBONUS", 0.03f, 0.00f, 0.1f );
 
+	// ja2mod: share of enemy elites that decide through the neural policy factory instead
+	// of the legacy tree. Only useful together with an AI.ini that declares that factory.
+	gGameExternalOptions.ubNeuralEliteFraction			= iniReader.ReadInteger( "Tactical Enemy Role Settings", "NEURAL_ELITE_FRACTION", 0, 0, 100 );
+
 	//################# Individual Militia Settings ##################
 	// Flugente: individual militia
 	gGameExternalOptions.fIndividualMilitia								= iniReader.ReadBoolean( "Individual Militia Settings", "INDIVIDUAL_MILITIA", FALSE );

@@ -6,6 +6,5 @@
 /.vs/
 /build/
 /out/
-/CMakePresets.json
 /CMakeSettings.json
 /lib/

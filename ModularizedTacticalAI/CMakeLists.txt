@@ -6,6 +6,8 @@ set(ModularizedTacticalAISrc
 "${CMAKE_CURRENT_SOURCE_DIR}/src/LegacyAIPlanFactory.cpp"
 "${CMAKE_CURRENT_SOURCE_DIR}/src/LegacyCreaturePlan.cpp"
 "${CMAKE_CURRENT_SOURCE_DIR}/src/LegacyZombiePlan.cpp"
+"${CMAKE_CURRENT_SOURCE_DIR}/src/NeuralPlan.cpp"
+"${CMAKE_CURRENT_SOURCE_DIR}/src/NeuralPlanFactory.cpp"
 "${CMAKE_CURRENT_SOURCE_DIR}/src/NullPlan.cpp"
 "${CMAKE_CURRENT_SOURCE_DIR}/src/NullPlanFactory.cpp"
 "${CMAKE_CURRENT_SOURCE_DIR}/src/Plan.cpp"

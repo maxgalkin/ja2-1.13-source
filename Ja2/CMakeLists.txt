@@ -1,3 +1,25 @@
+# GameVersion.cpp carries two placeholders, @Version@ and @Build@. Upstream
+# substitutes them with sed in the GitHub Actions workflow, so a build that runs
+# anywhere else ships an executable whose in-game version reads "@Version@".
+# The fork keeps the file as GameVersion.cpp.in and lets CMake fill it in.
+# JA2MOD_VERSION must stay within 15 characters (czVersionString is CHAR8[16]).
+if(NOT DEFINED JA2MOD_VERSION)
+	set(JA2MOD_VERSION "ja2mod-dev")
+endif()
+if(NOT DEFINED JA2MOD_BUILD)
+	set(JA2MOD_BUILD "ja2mod local build")
+endif()
+string(LENGTH "${JA2MOD_VERSION}" ja2modVersionLength)
+if(ja2modVersionLength GREATER 15)
+	message(FATAL_ERROR "JA2MOD_VERSION is ${ja2modVersionLength} characters, the engine allows 15")
+endif()
+set(Version "${JA2MOD_VERSION}")
+set(Build "${JA2MOD_BUILD}")
+configure_file(
+	"${CMAKE_CURRENT_SOURCE_DIR}/GameVersion.cpp.in"
+	"${CMAKE_CURRENT_BINARY_DIR}/GameVersion.cpp"
+	@ONLY)
+
 set(Ja2Src
 "${CMAKE_CURRENT_SOURCE_DIR}/aniviewscreen.cpp"
 "${CMAKE_CURRENT_SOURCE_DIR}/Credits.cpp"
@@ -7,7 +29,7 @@ set(Ja2Src
 "${CMAKE_CURRENT_SOURCE_DIR}/gameloop.cpp"
 "${CMAKE_CURRENT_SOURCE_DIR}/gamescreen.cpp"
 "${CMAKE_CURRENT_SOURCE_DIR}/GameSettings.cpp"
-"${CMAKE_CURRENT_SOURCE_DIR}/GameVersion.cpp"
+"${CMAKE_CURRENT_BINARY_DIR}/GameVersion.cpp"
 "${CMAKE_CURRENT_SOURCE_DIR}/HelpScreen.cpp"
 "${CMAKE_CURRENT_SOURCE_DIR}/Init.cpp"
 "${CMAKE_CURRENT_SOURCE_DIR}/Intro.cpp"
