@@ -560,6 +560,24 @@ if( g_lang != i18n::Lang::en ) {
 	strcat(fileName, ITEMCHOICESFILENAME_MILITIA_ELITE);
 	SGP_THROW_IFFALSE(ReadInArmyItemChoicesStats(gArmyItemChoices[SOLDIER_CLASS_ELITE_MILITIA], fileName),ITEMCHOICESFILENAME_MILITIA_ELITE);
 
+	// ja2mod: the neural faction's own tables. These two are deliberately not fatal when missing:
+	// ja2mod.exe has to start against a stock Data-1.13, where the files do not exist. In that case
+	// the class borrows the elite tables, which is also what makes a fraction of zero behave
+	// exactly like stock.
+	strcpy(fileName, directoryName);
+	strcat(fileName, GUNCHOICESFILENAME_ENEMY_NEURAL);
+	if ( !ReadInExtendedArmyGunChoicesStats(gExtendedArmyGunChoices[SOLDIER_CLASS_NEURAL], fileName) )
+	{
+		memcpy(gExtendedArmyGunChoices[SOLDIER_CLASS_NEURAL], gExtendedArmyGunChoices[SOLDIER_CLASS_ELITE], sizeof(gExtendedArmyGunChoices[SOLDIER_CLASS_ELITE]));
+	}
+
+	strcpy(fileName, directoryName);
+	strcat(fileName, ITEMCHOICESFILENAME_ENEMY_NEURAL);
+	if ( !ReadInArmyItemChoicesStats(gArmyItemChoices[SOLDIER_CLASS_NEURAL], fileName) )
+	{
+		memcpy(gArmyItemChoices[SOLDIER_CLASS_NEURAL], gArmyItemChoices[SOLDIER_CLASS_ELITE], sizeof(gArmyItemChoices[SOLDIER_CLASS_ELITE]));
+	}
+
 	strcpy(fileName, directoryName);
 	strcat(fileName, IMPITEMCHOICESFILENAME);
 	SGP_THROW_IFFALSE(ReadInIMPItemChoicesStats(fileName),IMPITEMCHOICESFILENAME);

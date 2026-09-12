@@ -33,3 +33,48 @@ distributed; it builds `ja2mod.exe`, which is deployed next to the stock `ja2.ex
 | 2026-09-12 | `ModularizedTacticalAI/src/NeuralPlanFactory.cpp` | Added. Hands creatures, crows, armed vehicles and zombies to the legacy factory; everything else gets a `NeuralPlan`. |
 | 2026-09-12 | `ModularizedTacticalAI/CMakeLists.txt` | Compiles the two new source files. |
 | 2026-09-12 | `ModularizedTacticalAI/src/PlanFactoryLibrary.cpp` | Registers `NeuralPlanFactory`, so `AI.ini` can name it in a `Factory_<n>` slot. |
+
+### The neural faction (`SOLDIER_CLASS_NEURAL`)
+
+A fourth enemy army class whose soldiers run the neural plan factory, wear their own
+uniform colours and draw from their own gun and item tables. It is a subset of the elite
+class for every strategic count: sector and group bookkeeping keeps counting a neural
+soldier as an elite and records how many of those elites are neural in a pair of shadow
+counters, the same arrangement the turncoat feature uses. With `NEURAL_ELITE_FRACTION`
+set to 0 no neural soldier is ever created and the game behaves exactly as stock.
+
+| Date | File | Change |
+| --- | --- | --- |
+| 2026-09-12 | `Tactical/Soldier Control.h` | Added `SOLDIER_CLASS_NEURAL` after the last stock class, `UNIFORM_ENEMY_NEURAL` to the uniform enum, `SOLDIER_GUN_CHOICE_TABLE_SIZE` and `SOLDIER_CLASS_HAS_ITEM_TABLE`, and widened `SOLDIER_CLASS_ENEMY` from a range test to one that names the new class. |
+| 2026-09-12 | `Tactical/Inventory Choosing.h` | The two class-indexed tables are sized by `SOLDIER_GUN_CHOICE_TABLE_SIZE` so the new class has a row of its own. |
+| 2026-09-12 | `Tactical/Inventory Choosing.cpp` | Same resize for the definitions; the three clamp sites ask `SOLDIER_CLASS_HAS_ITEM_TABLE`; `GenerateRandomEquipment`'s assert and the equipment rating, item status and gasmask switches accept the new class at the elite values; the Rebel Command equipment modifier uses `SOLDIER_CLASS_ENEMY`. |
+| 2026-09-12 | `Tactical/Items.cpp` | Two more clamp sites converted to `SOLDIER_CLASS_HAS_ITEM_TABLE`. |
+| 2026-09-12 | `Strategic/Strategic Transport Groups.cpp` | Table resize; transport groups accept the new class and key their per-class map with it. |
+| 2026-09-12 | `TacticalAI/AIUtils.cpp` | `CalcDifficultyModifier` gives the elite modifier; the elite alert-status rule applies; `CorpseEnemyTeam` recognises the new uniform, which is not adjacent to the three stock enemy ones. |
+| 2026-09-12 | `Tactical/Soldier Create.cpp` | Palette case, elite experience level, the `TacticalCreateNeuralEnemy` factory, and the AI index assignment that replaces the temporary fraction tag added with the AI hook. |
+| 2026-09-12 | `Tactical/Soldier Create.h` | Declares `TacticalCreateNeuralEnemy`. |
+| 2026-09-12 | `Strategic/XML_UniformColors.cpp` | Parses a seventh `ENEMY_NEURAL` block. Unlike the six stock blocks it is optional: without one the class wears the elite uniform, so `ja2mod.exe` still starts against a stock `Data-1.13`. |
+| 2026-09-12 | `Strategic/Campaign Types.h` | `SECTORINFO` and `UNDERGROUND_SECTORINFO` gain `ubNumElites_Neural` and `ubNeuralInBattle`, taken out of the existing padding so the structures, which savegames store as raw blobs, keep their size. |
+| 2026-09-12 | `Strategic/Strategic Movement.h` | The same pair in `ENEMYGROUP`, likewise out of the padding. |
+| 2026-09-12 | `Strategic/Queen Command.cpp` | `NeuralShareOfElites`, the single helper that turns `NEURAL_ELITE_FRACTION` into a count; the garrison, mobile-group and underground spawn paths use it; the map-placement census, the group-assignment switch and the three death-bookkeeping switches handle the new class. |
+| 2026-09-12 | `Strategic/Queen Command.h` | Declares `NeuralShareOfElites`. |
+| 2026-09-12 | `Tactical/Soldier Init List.cpp` | `AddSoldierInitListEnemyDefenceSoldiers` takes the neural count and retags that many elite placements through a wrapper around `AddPlacementToWorld`, so every slot count and running total in the allocator keeps its stock arithmetic. |
+| 2026-09-12 | `Tactical/Soldier Init List.h` | The new parameter. |
+| 2026-09-12 | `Tactical/Enemy Soldier Save.cpp` | Preserved placements of the new class count as elites; the two reinforcement calls pass the neural share of the newly arrived elites. |
+| 2026-09-12 | `Strategic/Auto Resolve.cpp` | `CreateEnemies` spends the neural share off the front of the elite loop; `CalcClassBonusOrPenalty` returns the elite multiplier; the two kill-record switches tally a neural kill as an elite kill. |
+| 2026-09-12 | `Strategic/Strategic Status.cpp` | `SoldierClassToRankIndex` maps the new class to the elite rank. |
+| 2026-09-12 | `TacticalAI/AIMain.cpp` | A neural soldier joining a sector increments the elite counter and the shadow counter. |
+| 2026-09-12 | `Tactical/Handle UI.cpp`, `Tactical/Merc Entering.cpp` | The same, for soldiers placed by the cheat key and by helicopter insertion. |
+| 2026-09-12 | `Tactical/Civ Quotes.cpp` | Elite quotes and elite taunts. |
+| 2026-09-12 | `Laptop/CampaignStats.cpp` | Filed under elites in the campaign statistics. |
+| 2026-09-12 | `Tactical/Soldier Ani.cpp` | Counts as an elite kill on a merc's record. |
+| 2026-09-12 | `Tactical/Overhead.cpp` | Held as an elite prisoner. |
+| 2026-09-12 | `Strategic/Rebel Command.cpp` | Pays the elite bounty; without this a neural kill is an unknown kill and pays nothing. |
+| 2026-09-12 | `Tactical/Weapons.cpp` | The four elite chance-to-hit bonus tests. |
+| 2026-09-12 | `TileEngine/worlddef.cpp` | Map summaries count a neural placement as an elite one. |
+| 2026-09-12 | `Tactical/opplist.cpp` | Debug label. |
+| 2026-09-12 | `TacticalAI/DecideAction.cpp`, `Tactical/SoldierTooltips.cpp` | The debug class-name arrays are indexed by class and had to grow with the enum, otherwise reading a neural soldier's name runs off the end. |
+| 2026-09-12 | `Tactical/LogicalBodyTypes/FilterDB.cpp` | The `SOLDIER_CLASS` enumeration list is declared with a count of `SOLDIER_CLASS_MAX`, so the new member had to be added to it. |
+| 2026-09-12 | `Tactical/XML.h` | Filenames for the new gun and item tables. |
+| 2026-09-12 | `Ja2/Init.cpp` | Loads those two tables. Unlike the stock tables the load is not fatal when the file is missing: the class then borrows the elite tables, so `ja2mod.exe` still starts against a stock `Data-1.13`. |
+| 2026-09-12 | `Ja2/GameVersion.h` | `SAVE_GAME_VERSION` bumped to 186 (`NEURAL_FACTION_SHADOW_COUNTERS`). The structure sizes are unchanged, so an older save still loads; the bump only puts the difference on record. |

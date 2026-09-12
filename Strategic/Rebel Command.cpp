@@ -4464,7 +4464,9 @@ void ApplySoldierBounty(const SOLDIERTYPE* pSoldier)
 		payout += gRebelCommandSettings.iSoldierBountiesKingpinPayout_Admin;
 	else if (pSoldier->ubSoldierClass == SOLDIER_CLASS_ARMY)
 		payout += gRebelCommandSettings.iSoldierBountiesKingpinPayout_Troop;
-	else if (pSoldier->ubSoldierClass == SOLDIER_CLASS_ELITE)
+	// ja2mod: a neural kill pays the elite bounty. Without this the function treats it as an
+	// unknown kill and pays nothing at all.
+	else if (pSoldier->ubSoldierClass == SOLDIER_CLASS_ELITE || pSoldier->ubSoldierClass == SOLDIER_CLASS_NEURAL)
 		payout += gRebelCommandSettings.iSoldierBountiesKingpinPayout_Elite;
 	else // unknown kill, bail out!
 		return;

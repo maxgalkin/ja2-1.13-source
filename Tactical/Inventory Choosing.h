@@ -84,7 +84,7 @@ void MarkAllWeaponsOfSameGunClassAsDropped( UINT16 usWeapon );
 void ResetMortarsOnTeamCount( void );
 
 // Flugente: created separate gun choices for different soldier classes
-extern ARMY_GUN_CHOICE_TYPE gExtendedArmyGunChoices[SOLDIER_GUN_CHOICE_SELECTIONS][ARMY_GUN_LEVELS];
+extern ARMY_GUN_CHOICE_TYPE gExtendedArmyGunChoices[SOLDIER_GUN_CHOICE_TABLE_SIZE][ARMY_GUN_LEVELS];
 
 // Headrock: Added LBE enumeration
 enum
@@ -114,7 +114,7 @@ enum
 };
 
 // Flugente: created separate gun choices for different soldier classes
-extern ARMY_GUN_CHOICE_TYPE gArmyItemChoices[SOLDIER_GUN_CHOICE_SELECTIONS][MAX_ITEM_TYPES];
+extern ARMY_GUN_CHOICE_TYPE gArmyItemChoices[SOLDIER_GUN_CHOICE_TABLE_SIZE][MAX_ITEM_TYPES];
 
 ////////////////// Flugente: militia equipment feature ///////////////////////////////////
 // move one set of militia equipment between sectors

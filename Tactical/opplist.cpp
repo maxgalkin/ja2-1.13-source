@@ -4860,6 +4860,7 @@ void DebugSoldierPage4( )
 		{
 			case SOLDIER_CLASS_ADMINISTRATOR:		gprintf( 320, LINE_HEIGHT * ubLine, L"(Administrator)" );	break;
 			case SOLDIER_CLASS_ELITE:				gprintf( 320, LINE_HEIGHT * ubLine, L"(Army Elite)" );		break;
+			case SOLDIER_CLASS_NEURAL:				gprintf( 320, LINE_HEIGHT * ubLine, L"(Army Neural)" );	break;	// ja2mod
 			case SOLDIER_CLASS_ARMY:				gprintf( 320, LINE_HEIGHT * ubLine, L"(Army Troop)" );		break;
 			case SOLDIER_CLASS_CREATURE:			gprintf( 320, LINE_HEIGHT * ubLine, L"(Creature)" );		break;
 			case SOLDIER_CLASS_GREEN_MILITIA:		gprintf( 320, LINE_HEIGHT * ubLine, L"(Green Militia)" );	break;

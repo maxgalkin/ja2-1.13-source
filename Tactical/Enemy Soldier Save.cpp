@@ -318,6 +318,9 @@ BOOLEAN LoadEnemySoldiersFromTempFile()
 							//Add preserved placements as long as they don't exceed the actual population.
 							switch( curr->pBasicPlacement->ubSoldierClass )
 							{
+								// ja2mod: a preserved placement keeps the neural class it was saved with, and it is counted
+								// as an elite here just as it is in the strategic layer.
+								case SOLDIER_CLASS_NEURAL:
 								case SOLDIER_CLASS_ELITE:
 									ubNumElites++;
 									if( ubNumElites < ubStrategicElites )
@@ -411,7 +414,8 @@ BOOLEAN LoadEnemySoldiersFromTempFile()
 		ubStrategicAdmins = ( ubStrategicAdmins > ubNumAdmins ) ? ubStrategicAdmins - ubNumAdmins : 0;
 		ubStrategicTanks = ( ubStrategicTanks > ubNumTanks ) ? ubStrategicTanks - ubNumTanks : 0;
 		ubStrategicJeeps = (ubStrategicJeeps > ubNumJeeps) ? ubStrategicJeeps - ubNumJeeps : 0;
-		AddSoldierInitListEnemyDefenceSoldiers( ubStrategicAdmins, ubStrategicTroops, ubStrategicElites, ubStrategicRobots, ubStrategicTanks, ubStrategicJeeps );
+		// ja2mod: the elites that arrived since the temp file was written bring their own neural share.
+		AddSoldierInitListEnemyDefenceSoldiers( ubStrategicAdmins, ubStrategicTroops, ubStrategicElites, ubStrategicRobots, ubStrategicTanks, ubStrategicJeeps, NeuralShareOfElites( ubStrategicElites, 0 ) );
 	}
 
 	if( ubStrategicCreatures > ubNumCreatures )
@@ -955,6 +959,9 @@ BOOLEAN NewWayOfLoadingEnemySoldiersFromTempFile()
 					//Add preserved placements as long as they don't exceed the actual population.
 					switch( curr->pBasicPlacement->ubSoldierClass )
 					{
+						// ja2mod: a preserved placement keeps the neural class it was saved with, and it is counted
+						// as an elite here just as it is in the strategic layer.
+						case SOLDIER_CLASS_NEURAL:
 						case SOLDIER_CLASS_ELITE:
 							ubNumElites++;
 							if( ubNumElites <= ubStrategicElites )
@@ -1046,7 +1053,8 @@ BOOLEAN NewWayOfLoadingEnemySoldiersFromTempFile()
 		ubStrategicAdmins = ( ubStrategicAdmins > ubNumAdmins ) ? ubStrategicAdmins - ubNumAdmins : 0;
 		ubStrategicTanks = ( ubStrategicTanks > ubNumTanks ) ? ubStrategicTanks - ubNumTanks : 0;
 		ubStrategicJeeps = (ubStrategicJeeps > ubNumJeeps) ? ubStrategicJeeps - ubNumJeeps : 0;
-		AddSoldierInitListEnemyDefenceSoldiers( ubStrategicAdmins, ubStrategicTroops, ubStrategicElites, ubStrategicRobots, ubStrategicTanks, ubStrategicJeeps );
+		// ja2mod: the elites that arrived since the temp file was written bring their own neural share.
+		AddSoldierInitListEnemyDefenceSoldiers( ubStrategicAdmins, ubStrategicTroops, ubStrategicElites, ubStrategicRobots, ubStrategicTanks, ubStrategicJeeps, NeuralShareOfElites( ubStrategicElites, 0 ) );
 	}
 
 	if( ubStrategicCreatures > ubNumCreatures )
@@ -1814,6 +1822,9 @@ BOOLEAN CountNumberOfElitesRegularsAdminsAndCreaturesFromEnemySoldiersTempFile( 
 		//increment the current type of soldier
 		switch( tempDetailedPlacement.ubSoldierClass )
 		{
+			// ja2mod: a preserved placement keeps the neural class it was saved with, and it is counted
+			// as an elite here just as it is in the strategic layer.
+			case SOLDIER_CLASS_NEURAL:
 			case SOLDIER_CLASS_ELITE:
 				(*pubNumElites)++;
 				break;
@@ -1879,6 +1890,9 @@ BOOLEAN CountNumberOfElitesRegularsAdminsAndCreaturesFromEnemySoldiersTempFile( 
 					//Add preserved placements as long as they don't exceed the actual population.
 					switch( curr->pBasicPlacement->ubSoldierClass )
 					{
+						// ja2mod: a preserved placement keeps the neural class it was saved with, and it is counted
+						// as an elite here just as it is in the strategic layer.
+						case SOLDIER_CLASS_NEURAL:
 						case SOLDIER_CLASS_ELITE:
 							ubNumElites++;
 							if( ubNumElites <= ubStrategicElites )

@@ -422,6 +422,9 @@ INT8 SoldierClassToRankIndex( UINT8 ubSoldierClass )
 	{
 		case SOLDIER_CLASS_ADMINISTRATOR:	
 		case SOLDIER_CLASS_BANDIT:					bRankIndex = 0;	break;
+		// ja2mod: the neural faction ranks with the elites, so its kills are tallied in the same
+		// column and its presence raises the same enemy-strength readings.
+		case SOLDIER_CLASS_NEURAL:
 		case SOLDIER_CLASS_ELITE:					bRankIndex = 2;	break;
 		case SOLDIER_CLASS_ARMY:					bRankIndex = 1;	break;
 		case SOLDIER_CLASS_ROBOT:					bRankIndex = 2; break;

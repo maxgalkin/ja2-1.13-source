@@ -8020,7 +8020,9 @@ UINT16 RandomMagazine( UINT16 usItem, UINT8 ubPercentStandard, UINT8 maxCoolness
 	DebugMsg (TOPIC_JA2,DBG_LEVEL_3,String("RandomMagazine (by index)"));
 
 	// Flugente: if accessing with wrong soldier class, or not using different selection choices, take default one
-	if ( bSoldierClass >= SOLDIER_GUN_CHOICE_SELECTIONS || bSoldierClass < SOLDIER_CLASS_NONE || !gGameExternalOptions.fSoldierClassSpecificItemTables )
+	// ja2mod: the neural class sits past the run of classes that own a table, so this asks for
+	// membership instead of comparing against the count.
+	if ( !SOLDIER_CLASS_HAS_ITEM_TABLE( bSoldierClass ) || !gGameExternalOptions.fSoldierClassSpecificItemTables )
 		bSoldierClass = SOLDIER_CLASS_NONE;
 
 	WEAPONTYPE *	pWeapon;
@@ -8112,7 +8114,9 @@ UINT16 RandomMagazine( OBJECTTYPE * pGun, UINT8 ubPercentStandard, UINT8 maxCool
 	DebugMsg (TOPIC_JA2,DBG_LEVEL_3,String("RandomMagazine"));
 
 	// Flugente: if accessing with wrong soldier class, or not using different selection choices, take default one
-	if ( bSoldierClass >= SOLDIER_GUN_CHOICE_SELECTIONS || bSoldierClass < SOLDIER_CLASS_NONE || !gGameExternalOptions.fSoldierClassSpecificItemTables )
+	// ja2mod: the neural class sits past the run of classes that own a table, so this asks for
+	// membership instead of comparing against the count.
+	if ( !SOLDIER_CLASS_HAS_ITEM_TABLE( bSoldierClass ) || !gGameExternalOptions.fSoldierClassSpecificItemTables )
 		bSoldierClass = SOLDIER_CLASS_NONE;
 
 	WEAPONTYPE *	pWeapon;

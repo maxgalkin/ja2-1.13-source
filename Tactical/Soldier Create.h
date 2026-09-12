@@ -465,6 +465,7 @@ SOLDIERTYPE* TacticalCreateSoldier( SOLDIERCREATE_STRUCT *pCreateStruct, UINT8 *
 //Randomly generated enemies used by strategic AI.
 SOLDIERTYPE* TacticalCreateAdministrator();
 SOLDIERTYPE* TacticalCreateEliteEnemy();
+SOLDIERTYPE* TacticalCreateNeuralEnemy();	// ja2mod
 SOLDIERTYPE* TacticalCreateArmyTroop();
 SOLDIERTYPE* TacticalCreateZombie();		// Flugente Zombies
 SOLDIERTYPE* TacticalCreateMilitia( UINT8 ubMilitiaClass, INT16 sX, INT16 sY );	// Flugente: added sector coordinates

@@ -30,6 +30,7 @@ STR16 szUniformErrorStrings[]=
 	L"MILITIA_ROOKIE",
 	L"MILITIA_REGULAR",
 	L"MILITIA_ELITE",
+	L"ENEMY_NEURAL",	// ja2mod
 };
 
 // Array to hold uniform data
@@ -82,7 +83,8 @@ UniformStartElementHandle(void *userData, const XML_Char *name, const char **att
 			strcmp(name, "ENEMY_ELITE") == 0 ||
 			strcmp(name, "MILITIA_ROOKIE") == 0 ||
 			strcmp(name, "MILITIA_REGULAR") == 0 ||
-			strcmp(name, "MILITIA_ELITE") == 0 ) )
+			strcmp(name, "MILITIA_ELITE") == 0 ||
+			strcmp(name, "ENEMY_NEURAL") == 0 ) )	// ja2mod
 		{
 			if (strcmp(name, "ENEMY_ADMIN") == 0)
 			{
@@ -107,6 +109,10 @@ UniformStartElementHandle(void *userData, const XML_Char *name, const char **att
 			else if (strcmp(name, "MILITIA_ELITE") == 0)
 			{
 				pData->sCurUniform = UNIFORM_MILITIA_ELITE;
+			}
+			else if (strcmp(name, "ENEMY_NEURAL") == 0)	// ja2mod
+			{
+				pData->sCurUniform = UNIFORM_ENEMY_NEURAL;
 			}
 			pData->curElement = UNIFORM_ELEMENT;
 			pData->maxReadDepth++; //we are not skipping this element
@@ -149,6 +155,16 @@ UniformEndElementHandle(void *userData, const XML_Char *name)
 	{
 		if(strcmp(name, "UNIFORMS") == 0)
 		{
+			// ja2mod: the neural uniform is the one entry that is not mandatory. ja2mod.exe has
+			// to start against a stock UniformColors.XML, which knows only the six original
+			// blocks, so a missing neural block means the faction wears the elite uniform. That
+			// is also what makes a spawn fraction of zero indistinguishable from stock.
+			if (!UniformDataFound[UNIFORM_ENEMY_NEURAL])
+			{
+				gUniformColors[UNIFORM_ENEMY_NEURAL] = gUniformColors[UNIFORM_ENEMY_ELITE];
+				UniformDataFound[UNIFORM_ENEMY_NEURAL] = TRUE;
+			}
+
 			// All entries are mandatory. Exception thrown if an entry was not found
 			for (UINT8 cnt = 0; cnt < NUM_UNIFORMS; cnt++)
 			{
@@ -168,7 +184,8 @@ UniformEndElementHandle(void *userData, const XML_Char *name)
 			strcmp(name, "ENEMY_ELITE") == 0 ||
 			strcmp(name, "MILITIA_ROOKIE") == 0 ||
 			strcmp(name, "MILITIA_REGULAR") == 0 ||
-			strcmp(name, "MILITIA_ELITE") == 0 )
+			strcmp(name, "MILITIA_ELITE") == 0 ||
+			strcmp(name, "ENEMY_NEURAL") == 0 )	// ja2mod
 		{
 			pData->curElement = UNIFORM_ELEMENT_LIST;
 

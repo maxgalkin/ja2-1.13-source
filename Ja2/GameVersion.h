@@ -22,6 +22,7 @@ extern	CHAR16		zBuildInformation[256];
 //
 //		Keeps track of the saved game version.	Increment the saved game version whenever 
 //	you will invalidate the saved game file
+#define			NEURAL_FACTION_SHADOW_COUNTERS				186 // ja2mod: SECTORINFO, UNDERGROUND_SECTORINFO and ENEMYGROUP carry the neural faction's shadow counters. The fields come out of existing padding, so the structures keep their size and an older save still reads; the number is bumped so that the difference is on record.
 #define			MERC_PROFILE_INSERTION_DATA					185 // Bigmap support for AddProfileToMap function
 #define			GROWTH_MODIFIERS								184
 #define			REBELCOMMAND									183
@@ -105,7 +106,7 @@ extern	CHAR16		zBuildInformation[256];
 #define			AP100_SAVEGAME_DATATYPE_CHANGE					105	// Before this, we didn't have the 100AP structure changes
 #define			NIV_SAVEGAME_DATATYPE_CHANGE					102	// Before this, we used the old structure system
 
-#define			SAVE_GAME_VERSION								MERC_PROFILE_INSERTION_DATA
+#define			SAVE_GAME_VERSION								NEURAL_FACTION_SHADOW_COUNTERS	// ja2mod
 
 //#define RUSSIANGOLD
 #ifdef __cplusplus

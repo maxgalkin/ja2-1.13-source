@@ -66,7 +66,7 @@ UINT32 guiMortarsRolledByTeam = 0;
 
 
 // Flugente: created separate gun choices for different soldier classes
-ARMY_GUN_CHOICE_TYPE gExtendedArmyGunChoices[SOLDIER_GUN_CHOICE_SELECTIONS][ARMY_GUN_LEVELS];// =
+ARMY_GUN_CHOICE_TYPE gExtendedArmyGunChoices[SOLDIER_GUN_CHOICE_TABLE_SIZE][ARMY_GUN_LEVELS];// =
 //{	// INDEX		CLASS				 #CHOICES
 //	{ /* 0 - lo pistols			*/	6,	SW38,					BARRACUDA,			DESERTEAGLE,	GLOCK_17,		M1911,	BERETTA_92F,-1,-1,-1,-1 ,-1,-1,-1,-1,-1,-1,-1,-1,-1,-1 ,-1,-1,-1,-1,-1,-1,-1,-1,-1,-1,-1,-1,-1,-1,-1,-1,-1,-1,-1,-1,-1,-1,-1,-1,-1,-1,-1,-1,-1,-1		},
 //	{ /* 1 - hi pist/shtgn	*/	6,	GLOCK_18,			BERETTA_93R,		P7M8,	M870,				M950		,FIVE7,-1,-1,-1,-1	,-1,-1,-1,-1,-1,-1,-1,-1,-1,-1,-1,-1,-1,-1,-1,-1,-1,-1,-1,-1,-1,-1,-1,-1,-1,-1,-1,-1,-1,-1,-1,-1,-1,-1,-1,-1,-1,-1,-1,-1		},
@@ -83,7 +83,7 @@ ARMY_GUN_CHOICE_TYPE gExtendedArmyGunChoices[SOLDIER_GUN_CHOICE_SELECTIONS][ARMY
 
 
 // Flugente: created separate gun choices for different soldier classes
-ARMY_GUN_CHOICE_TYPE gArmyItemChoices[SOLDIER_GUN_CHOICE_SELECTIONS][MAX_ITEM_TYPES];
+ARMY_GUN_CHOICE_TYPE gArmyItemChoices[SOLDIER_GUN_CHOICE_TABLE_SIZE][MAX_ITEM_TYPES];
 
 void RandomlyChooseWhichItemsAreDroppable( SOLDIERCREATE_STRUCT *pp, INT8 bSoldierClass );
 void EquipArmouredVehicle( SOLDIERCREATE_STRUCT *pp );
@@ -253,7 +253,8 @@ void GenerateRandomEquipment( SOLDIERCREATE_STRUCT *pp, INT8 bSoldierClass, INT8
 	}
 
 	// rftr: enemy tanks, jeeps, and robots would have early exited above
-	Assert( (bSoldierClass >= SOLDIER_CLASS_NONE) && (bSoldierClass <= SOLDIER_CLASS_ELITE_MILITIA) );
+	// ja2mod: the neural class is past the militia run, so the range test has to allow it too.
+	Assert( ( (bSoldierClass >= SOLDIER_CLASS_NONE) && (bSoldierClass <= SOLDIER_CLASS_ELITE_MILITIA) ) || bSoldierClass == SOLDIER_CLASS_NEURAL );
 	Assert( ( bEquipmentRating >= 0 ) && ( bEquipmentRating <= 4 ) );
 
 	// equipment level is modified by 1/10 of the difficulty percentage, -5, so it's between -5 to +5
@@ -274,7 +275,9 @@ void GenerateRandomEquipment( SOLDIERCREATE_STRUCT *pp, INT8 bSoldierClass, INT8
 	// SANDRO - new behaviour of progress setting
 	bEquipmentModifier = bEquipmentRating + ( ( CalcDifficultyModifier( bSoldierClass ) / 10 ) - 5 );
 
-	if (bSoldierClass >= SOLDIER_CLASS_ADMINISTRATOR && bSoldierClass <= SOLDIER_CLASS_ARMY)
+	// ja2mod: this used to be the admin..army range. The neural class is an army class too, so it
+	// takes the same Rebel Command equipment modifier.
+	if (SOLDIER_CLASS_ENEMY(bSoldierClass))
 		bEquipmentModifier += RebelCommand::GetEnemyEquipmentCoolnessModifier();
 
 	switch( gGameOptions.ubProgressSpeedOfItemsChoices )
@@ -547,6 +550,7 @@ void GenerateRandomEquipment( SOLDIERCREATE_STRUCT *pp, INT8 bSoldierClass, INT8
 			break;
 
 		case SOLDIER_CLASS_ELITE:
+		case SOLDIER_CLASS_NEURAL:	// ja2mod: the neural faction is equipped like the elites
 		case SOLDIER_CLASS_ELITE_MILITIA:
 			//if ( gGameOptions.fSlowProgressForEnemyItemsChoice )
 			//	bRating = bEquipmentModifier - ( bSoldierClass == SOLDIER_CLASS_ELITE );
@@ -554,7 +558,7 @@ void GenerateRandomEquipment( SOLDIERCREATE_STRUCT *pp, INT8 bSoldierClass, INT8
 			bRating = BAD_ELITE_EQUIPMENT_RATING + bEquipmentModifier;
 
 			// Equipment quality modifier
-			if ( bSoldierClass == SOLDIER_CLASS_ELITE )
+			if ( bSoldierClass == SOLDIER_CLASS_ELITE || bSoldierClass == SOLDIER_CLASS_NEURAL )	// ja2mod
 			{
 				if ( gGameExternalOptions.sEnemyEliteEquipmentQualityModifier != 0 )
 					bRating += gGameExternalOptions.sEnemyEliteEquipmentQualityModifier;
@@ -929,6 +933,7 @@ void ChooseWeaponForSoldierCreateStruct( SOLDIERCREATE_STRUCT *pp, INT8 bWeaponC
 			bStatus = (INT8)min( 100, bStatus );
 			break;
 		case SOLDIER_CLASS_ELITE:
+		case SOLDIER_CLASS_NEURAL:	// ja2mod
 		case SOLDIER_CLASS_ELITE_MILITIA:
 			//85-90% +  1% every 10% progress
 			bStatus = (INT8)(85 + Random( 6 ));
@@ -1922,6 +1927,7 @@ void ChooseFaceGearForSoldierCreateStruct( SOLDIERCREATE_STRUCT *pp )
 	switch( pp->ubSoldierClass )
 	{
 		case SOLDIER_CLASS_ELITE:
+		case SOLDIER_CLASS_NEURAL:	// ja2mod
 		case SOLDIER_CLASS_ELITE_MILITIA:
 			if ( Chance( bDifficultyRating ) )
 			{
@@ -3216,7 +3222,9 @@ UINT16 SelectStandardArmyGun( UINT8 uiGunLevel, INT8 bSoldierClass )
 		// use table of extended gun choices
 
 		// Flugente: if accessing with wrong soldier class, or not using different selection choices, take default one
-		if ( bSoldierClass >= SOLDIER_GUN_CHOICE_SELECTIONS || bSoldierClass < SOLDIER_CLASS_NONE || !gGameExternalOptions.fSoldierClassSpecificItemTables )
+		// ja2mod: the neural class sits past the run of classes that own a table, so this asks for
+		// membership instead of comparing against the count.
+		if ( !SOLDIER_CLASS_HAS_ITEM_TABLE( bSoldierClass ) || !gGameExternalOptions.fSoldierClassSpecificItemTables )
 			bSoldierClass = SOLDIER_CLASS_NONE;
 
 		pGunChoiceTable = &(gExtendedArmyGunChoices[bSoldierClass][0]);
@@ -3363,7 +3371,9 @@ UINT16 PickARandomItem(UINT8 typeIndex, INT8 bSoldierClass, UINT8 wantedCoolness
 	BOOLEAN pickItem = FALSE;
 
 	// Flugente: if accessing with wrong soldier class, or not using different selection choices, take default one
-	if ( bSoldierClass >= SOLDIER_GUN_CHOICE_SELECTIONS || bSoldierClass < SOLDIER_CLASS_NONE || !gGameExternalOptions.fSoldierClassSpecificItemTables )
+	// ja2mod: the neural class sits past the run of classes that own a table, so this asks for
+	// membership instead of comparing against the count.
+	if ( !SOLDIER_CLASS_HAS_ITEM_TABLE( bSoldierClass ) || !gGameExternalOptions.fSoldierClassSpecificItemTables )
 		bSoldierClass = SOLDIER_CLASS_NONE;
 
 	if ( gArmyItemChoices[bSoldierClass][ typeIndex ].ubChoices <= 0 )
@@ -3460,7 +3470,9 @@ UINT16 PickARandomAttachment(UINT8 typeIndex, INT8 bSoldierClass, UINT16 usBaseI
 	UINT16 defaultItem = 0;
 
 	// Flugente: if accessing with wrong soldier class, or not using different selection choices, take default one
-	if ( bSoldierClass >= SOLDIER_GUN_CHOICE_SELECTIONS || bSoldierClass < SOLDIER_CLASS_NONE || !gGameExternalOptions.fSoldierClassSpecificItemTables )
+	// ja2mod: the neural class sits past the run of classes that own a table, so this asks for
+	// membership instead of comparing against the count.
+	if ( !SOLDIER_CLASS_HAS_ITEM_TABLE( bSoldierClass ) || !gGameExternalOptions.fSoldierClassSpecificItemTables )
 		bSoldierClass = SOLDIER_CLASS_NONE;
 
 //	DebugMsg (TOPIC_JA2,DBG_LEVEL_3,String("PickARandomAttachment: # choices = %d", gArmyItemChoices[ typeIndex ].ubChoices ));

@@ -4072,6 +4072,7 @@ BOOLEAN HandleSoldierDeath( SOLDIERTYPE *pSoldier , BOOLEAN *pfMadeCorpse )
 							case SOLDIER_CLASS_ROBOT:
 								gMercProfiles[ MercPtrs[ ubAttacker ]->ubProfile ].records.usKillsOthers++;
 								break;
+							case SOLDIER_CLASS_NEURAL :	// ja2mod: counts as an elite kill
 							case SOLDIER_CLASS_ELITE :
 								gMercProfiles[ MercPtrs[ ubAttacker ]->ubProfile ].records.usKillsElites++;
 								break;

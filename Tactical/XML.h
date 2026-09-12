@@ -94,6 +94,8 @@ typedef PARSE_STAGE;
 #define	GUNCHOICESFILENAME_MILITIA_GREEN		"Inventory\\GunChoices_Militia_Green.xml"
 #define	GUNCHOICESFILENAME_MILITIA_REGULAR		"Inventory\\GunChoices_Militia_Regular.xml"
 #define	GUNCHOICESFILENAME_MILITIA_ELITE		"Inventory\\GunChoices_Militia_Elite.xml"
+// ja2mod: the neural faction's own gun table. Optional, see InitializeGame.
+#define	GUNCHOICESFILENAME_ENEMY_NEURAL			"Inventory\\GunChoices_Enemy_Neural.xml"
 #define	ENEMYITEMCHOICESFILENAME				"Inventory\\EnemyItemChoices.xml"	// default selection
 #define ITEMCHOICESFILENAME_ENEMY_ADMIN			"Inventory\\ItemChoices_Enemy_Admin.xml"
 #define ITEMCHOICESFILENAME_ENEMY_REGULAR		"Inventory\\ItemChoices_Enemy_Regular.xml"
@@ -101,6 +103,8 @@ typedef PARSE_STAGE;
 #define ITEMCHOICESFILENAME_MILITIA_GREEN		"Inventory\\ItemChoices_Militia_Green.xml"
 #define ITEMCHOICESFILENAME_MILITIA_REGULAR		"Inventory\\ItemChoices_Militia_Regular.xml"
 #define ITEMCHOICESFILENAME_MILITIA_ELITE		"Inventory\\ItemChoices_Militia_Elite.xml"
+// ja2mod: the neural faction's own item table. Optional, see InitializeGame.
+#define ITEMCHOICESFILENAME_ENEMY_NEURAL		"Inventory\\ItemChoices_Enemy_Neural.xml"
 #define	IMPITEMCHOICESFILENAME					"Inventory\\IMPItemChoices.xml"
 #define MERCSTARTINGGEARFILENAME				"Inventory\\MercStartingGear.xml"
 #define ENEMYWEAPONDROPSFILENAME				"Inventory\\EnemyWeaponDrops.xml"

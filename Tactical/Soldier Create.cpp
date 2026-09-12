@@ -1617,6 +1617,13 @@ void GeneratePaletteForSoldier( SOLDIERTYPE *pSoldier, UINT8 ubSoldierClass, UIN
 			SET_PALETTEREP_ID( pSoldier->PantsPal, gUniformColors[ UNIFORM_ENEMY_ELITE ].pants );
 			pSoldier->ubSoldierClass = ubSoldierClass;
 			return;
+		// ja2mod: the neural faction's own colours. Without this case the class falls through to
+		// the civilian palette roll below and its soldiers look like random townspeople.
+		case SOLDIER_CLASS_NEURAL:
+			SET_PALETTEREP_ID( pSoldier->VestPal, gUniformColors[ UNIFORM_ENEMY_NEURAL ].vest );
+			SET_PALETTEREP_ID( pSoldier->PantsPal, gUniformColors[ UNIFORM_ENEMY_NEURAL ].pants );
+			pSoldier->ubSoldierClass = ubSoldierClass;
+			return;
 		case SOLDIER_CLASS_ARMY:
 			//SET_PALETTEREP_ID( pSoldier->VestPal, "REDVEST"	);
 			//SET_PALETTEREP_ID( pSoldier->PantsPal, "GREENPANTS"	);
@@ -1900,14 +1907,10 @@ BOOLEAN TacticalCopySoldierFromCreateStruct( SOLDIERTYPE *pSoldier, SOLDIERCREAT
 		}
 	}
 
-	// ja2mod: route a share of the enemy elites to the neural policy factory. The tag is
-	// nothing but a bAIIndex, which the modularized AI maps to a factory through AI.ini and
-	// which savegames already carry, so no other part of the engine has to know about it.
-	// This is the temporary way of selecting policy-driven soldiers, until they become a
-	// soldier class of their own.
-	if ( pCreateStruct->bTeam == ENEMY_TEAM && pSoldier->ubSoldierClass == SOLDIER_CLASS_ELITE &&
-		 gGameExternalOptions.ubNeuralEliteFraction > 0 &&
-		 Random( 100 ) < gGameExternalOptions.ubNeuralEliteFraction )
+	// ja2mod: the neural faction decides through NeuralPlanFactory rather than the legacy
+	// tree. bAIIndex is what the modularized AI maps to a factory through AI.ini, and it is
+	// already part of the savegame, so the class alone drives the choice here.
+	if ( pSoldier->ubSoldierClass == SOLDIER_CLASS_NEURAL )
 	{
 		pSoldier->bAIIndex = NEURAL_AI_INDEX;
 	}
@@ -2543,6 +2546,7 @@ void CreateDetailedPlacementGivenBasicPlacementInfo( SOLDIERCREATE_STRUCT *pp, B
 			pp->bExpLevel = (INT8) 4 + bExpLevelModifier;
 			break;
 		case SOLDIER_CLASS_ELITE:
+		case SOLDIER_CLASS_NEURAL:	// ja2mod: the neural faction starts on the elite experience curve
 			pp->bExpLevel = (INT8) 6 + bExpLevelModifier;
 			break;
 		case SOLDIER_CLASS_GREEN_MILITIA:
@@ -3184,6 +3188,44 @@ SOLDIERTYPE* TacticalCreateEliteEnemy()
 	//is in AddPlacementToWorld() used for inserting defensive enemies.
 	//NOTE:	We don't want to add Mike or Iggy if this is being called from autoresolve!
 	OkayToUpgradeEliteToSpecialProfiledEnemy( &pp );
+
+	pSoldier = TacticalCreateSoldier( &pp, &ubID );
+	if ( pSoldier )
+	{
+		// send soldier to centre of map, roughly
+		pSoldier->aiData.sNoiseGridno = (CENTRAL_GRIDNO + ( Random( CENTRAL_RADIUS * 2 + 1 ) - CENTRAL_RADIUS ) + ( Random( CENTRAL_RADIUS * 2 + 1 ) - CENTRAL_RADIUS ) * WORLD_COLS);
+		pSoldier->aiData.ubNoiseVolume = MAX_MISC_NOISE_DURATION;
+	}
+
+	return( pSoldier );
+}
+
+// ja2mod: the neural faction's soldier factory, a copy of TacticalCreateEliteEnemy above with
+// three differences: the class, the AI index that routes the soldier to NeuralPlanFactory, and
+// no upgrade to Mike or Iggy (those two are written as elites and should stay elites).
+//USED BY STRATEGIC AI and AUTORESOLVE
+SOLDIERTYPE* TacticalCreateNeuralEnemy()
+{
+	BASIC_SOLDIERCREATE_STRUCT bp;
+	SOLDIERCREATE_STRUCT pp;
+	UINT8 ubID;
+	SOLDIERTYPE * pSoldier;
+
+	if( guiCurrentScreen == AUTORESOLVE_SCREEN && !gfPersistantPBI )
+	{
+		pSoldier = ReserveTacticalSoldierForAutoresolve( SOLDIER_CLASS_NEURAL );
+		if( pSoldier ) return pSoldier;
+	}
+
+	memset( &bp, 0, sizeof( BASIC_SOLDIERCREATE_STRUCT ) );
+	RandomizeRelativeLevel( &( bp.bRelativeAttributeLevel ), SOLDIER_CLASS_NEURAL );
+	RandomizeRelativeLevel( &( bp.bRelativeEquipmentLevel ), SOLDIER_CLASS_NEURAL );
+	bp.bTeam = ENEMY_TEAM;
+	bp.bOrders	= SEEKENEMY;
+	bp.bAttitude = (INT8) Random( MAXATTITUDES );
+	bp.ubBodyType = -1;
+	bp.ubSoldierClass = SOLDIER_CLASS_NEURAL;
+	CreateDetailedPlacementGivenBasicPlacementInfo( &pp, &bp );
 
 	pSoldier = TacticalCreateSoldier( &pp, &ubID );
 	if ( pSoldier )

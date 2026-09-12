@@ -48,8 +48,8 @@ and the difficulty of the game.
 #define TROOP_TURNCOAT_MONITOR_REQUIREMENT 3
 #define ADMIN_TURNCOAT_MONITOR_REQUIREMENT 5
 
-extern ARMY_GUN_CHOICE_TYPE gExtendedArmyGunChoices[SOLDIER_GUN_CHOICE_SELECTIONS][ARMY_GUN_LEVELS];
-extern ARMY_GUN_CHOICE_TYPE gArmyItemChoices[SOLDIER_GUN_CHOICE_SELECTIONS][MAX_ITEM_TYPES];
+extern ARMY_GUN_CHOICE_TYPE gExtendedArmyGunChoices[SOLDIER_GUN_CHOICE_TABLE_SIZE][ARMY_GUN_LEVELS];
+extern ARMY_GUN_CHOICE_TYPE gArmyItemChoices[SOLDIER_GUN_CHOICE_TABLE_SIZE][MAX_ITEM_TYPES];
 extern BOOLEAN gfTownUsesLoyalty[MAX_TOWNS];
 
 std::map<UINT8, std::map<int, UINT8>> transportGroupIdToSoldierMap;
@@ -752,7 +752,8 @@ void UpdateTransportGroupInventory()
 				}
 				else if (pSoldier->ubSoldierClass == SOLDIER_CLASS_ADMINISTRATOR
 					|| pSoldier->ubSoldierClass == SOLDIER_CLASS_ARMY
-					|| pSoldier->ubSoldierClass == SOLDIER_CLASS_ELITE)
+					|| pSoldier->ubSoldierClass == SOLDIER_CLASS_ELITE
+					|| pSoldier->ubSoldierClass == SOLDIER_CLASS_NEURAL)	// ja2mod
 				{
 					// jeep is carrying most things, so soldiers just have ammo
 					if (itemMap[AMMO_BOXES].size() > 0)
@@ -889,6 +890,7 @@ void AddToTransportGroupMap(UINT8 groupId, int soldierClass, UINT8 amount)
 	case SOLDIER_CLASS_ADMINISTRATOR:
 	case SOLDIER_CLASS_ARMY:
 	case SOLDIER_CLASS_ELITE:
+	case SOLDIER_CLASS_NEURAL:	// ja2mod: the map is keyed by class, so the new key costs nothing
 	case SOLDIER_CLASS_JEEP:
 		transportGroupIdToSoldierMap[groupId][soldierClass] += amount;
 		break;

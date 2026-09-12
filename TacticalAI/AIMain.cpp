@@ -2961,6 +2961,13 @@ void HandleAITacticalTraversal( SOLDIERTYPE * pSoldier )
 
 		switch( pSoldier->ubSoldierClass )
 		{
+		// ja2mod: a neural soldier joining a sector joins it as an elite, and the shadow counter
+		// records that one of those elites is neural.
+		case SOLDIER_CLASS_NEURAL:
+			++pSectorInfo->ubNumElites_Neural;
+			++pSectorInfo->ubNumElites;
+			break;
+
 		case SOLDIER_CLASS_ELITE:
 			++pSectorInfo->ubNumElites;
 			break;

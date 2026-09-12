@@ -1047,7 +1047,47 @@ UINT8 AddSoldierInitListTeamToWorld( INT8 bTeam, UINT8 ubMaxNum )
 	return ubNumAdded;
 }
 
-void AddSoldierInitListEnemyDefenceSoldiers( UINT8 ubTotalAdmin, UINT8 ubTotalTroops, UINT8 ubTotalElite, UINT8 ubTotalRobots, UINT8 ubTotalTanks, UINT8 ubTotalJeeps )
+// ja2mod: how many of the elite placements this call still has to hand to the neural faction.
+// The allocator below counts neural soldiers as elites from start to finish, so that every slot
+// count, every random draw and every running total keeps its stock arithmetic; the class is
+// swapped in at the one moment it matters, when a placement becomes a soldier.
+static UINT8 gubNeuralDefencePlacementsLeft = 0;
+
+// ja2mod: stands in for AddPlacementToWorld inside AddSoldierInitListEnemyDefenceSoldiers.
+// An elite placement is retagged as neural while the quota lasts. If the placement is refused
+// the class is put back, because the node stays in the list and may be picked again later.
+static BOOLEAN AddEnemyDefencePlacementToWorld( SOLDIERINITNODE* curr )
+{
+	if ( !gubNeuralDefencePlacementsLeft || curr->pBasicPlacement->ubSoldierClass != SOLDIER_CLASS_ELITE )
+	{
+		return AddPlacementToWorld( curr );
+	}
+
+	curr->pBasicPlacement->ubSoldierClass = SOLDIER_CLASS_NEURAL;
+
+	if ( curr->pDetailedPlacement )
+	{
+		curr->pDetailedPlacement->ubSoldierClass = SOLDIER_CLASS_NEURAL;
+	}
+
+	if ( AddPlacementToWorld( curr ) )
+	{
+		--gubNeuralDefencePlacementsLeft;
+		return TRUE;
+	}
+
+	curr->pBasicPlacement->ubSoldierClass = SOLDIER_CLASS_ELITE;
+
+	if ( curr->pDetailedPlacement )
+	{
+		curr->pDetailedPlacement->ubSoldierClass = SOLDIER_CLASS_ELITE;
+	}
+
+	return FALSE;
+}
+
+
+void AddSoldierInitListEnemyDefenceSoldiers( UINT8 ubTotalAdmin, UINT8 ubTotalTroops, UINT8 ubTotalElite, UINT8 ubTotalRobots, UINT8 ubTotalTanks, UINT8 ubTotalJeeps, UINT8 ubTotalNeural )
 {
 	SOLDIERINITNODE *mark;
 	SOLDIERINITNODE *curr;
@@ -1071,6 +1111,9 @@ void AddSoldierInitListEnemyDefenceSoldiers( UINT8 ubTotalAdmin, UINT8 ubTotalTr
 
 	//Specs call for only one profiled enemy can be in a sector at a time due to flavor reasons.
 	gfProfiledEnemyAdded = FALSE;
+
+	// ja2mod: the caller has already decided how many of the elites belong to the neural faction.
+	gubNeuralDefencePlacementsLeft = min( ubTotalNeural, ubTotalElite );
 
 	//Because the enemy defence forces work differently than the regular map placements, the numbers
 	//of each type of enemy may not be the same.	Elites will choose the best placements, then army, then
@@ -1217,7 +1260,7 @@ void AddSoldierInitListEnemyDefenceSoldiers( UINT8 ubTotalAdmin, UINT8 ubTotalTr
 					if( *pCurrSlots <= *pCurrTotal || Random( *pCurrSlots ) < *pCurrTotal )
 					{
 						//found matching team, so add this soldier to the game.
-						if( AddPlacementToWorld( curr ) )
+						if( AddEnemyDefencePlacementToWorld( curr ) )
 						{
 							(*pCurrTotal)--;
 							ubMaxNum--;
@@ -1274,7 +1317,7 @@ void AddSoldierInitListEnemyDefenceSoldiers( UINT8 ubTotalAdmin, UINT8 ubTotalTr
 					if( *pCurrSlots <= *pCurrTotal || Random( *pCurrSlots ) < *pCurrTotal )
 					{
 						//found matching team, so add this soldier to the game.
-						if( AddPlacementToWorld( curr ) )
+						if( AddEnemyDefencePlacementToWorld( curr ) )
 						{
 							(*pCurrTotal)--;
 							ubMaxNum--;
@@ -1331,7 +1374,7 @@ void AddSoldierInitListEnemyDefenceSoldiers( UINT8 ubTotalAdmin, UINT8 ubTotalTr
 					if( *pCurrSlots <= *pCurrTotal || Random( *pCurrSlots ) < *pCurrTotal )
 					{
 						//found matching team, so add this soldier to the game.
-						if( AddPlacementToWorld( curr ) )
+						if( AddEnemyDefencePlacementToWorld( curr ) )
 						{
 							(*pCurrTotal)--;
 							ubMaxNum--;
@@ -1402,7 +1445,7 @@ void AddSoldierInitListEnemyDefenceSoldiers( UINT8 ubTotalAdmin, UINT8 ubTotalTr
 			}
 			else
 				Assert(0);
-			if( AddPlacementToWorld( curr ) )
+			if( AddEnemyDefencePlacementToWorld( curr ) )
 			{
 				ubMaxNum--;
 			}
@@ -1447,7 +1490,7 @@ void AddSoldierInitListEnemyDefenceSoldiers( UINT8 ubTotalAdmin, UINT8 ubTotalTr
 					if( *pCurrSlots <= *pCurrTotal || Random( *pCurrSlots ) < *pCurrTotal )
 					{
 						//found matching team, so add this soldier to the game.
-						if( AddPlacementToWorld( curr ) )
+						if( AddEnemyDefencePlacementToWorld( curr ) )
 						{
 							(*pCurrTotal)--;
 							ubMaxNum--;
@@ -1493,7 +1536,7 @@ void AddSoldierInitListEnemyDefenceSoldiers( UINT8 ubTotalAdmin, UINT8 ubTotalTr
 				curr->pBasicPlacement->ubSoldierClass = SOLDIER_CLASS_JEEP;
 				curr->pBasicPlacement->ubBodyType = COMBAT_JEEP;
 				ubTotalJeeps--;
-				if( AddPlacementToWorld( curr ) )
+				if( AddEnemyDefencePlacementToWorld( curr ) )
 				{
 					ubMaxNum--;
 				}
@@ -1506,7 +1549,7 @@ void AddSoldierInitListEnemyDefenceSoldiers( UINT8 ubTotalAdmin, UINT8 ubTotalTr
 				curr->pBasicPlacement->ubSoldierClass = SOLDIER_CLASS_TANK;
 				curr->pBasicPlacement->ubBodyType = TANK_NW;
 				ubTotalTanks--;
-				if ( AddPlacementToWorld( curr ) )
+				if ( AddEnemyDefencePlacementToWorld( curr ) )
 				{
 					ubMaxNum--;
 				}
@@ -1519,7 +1562,7 @@ void AddSoldierInitListEnemyDefenceSoldiers( UINT8 ubTotalAdmin, UINT8 ubTotalTr
 				curr->pBasicPlacement->ubSoldierClass = SOLDIER_CLASS_ROBOT;
 				curr->pBasicPlacement->ubBodyType = ROBOTNOWEAPON;
 				ubTotalRobots--;
-				if ( AddPlacementToWorld( curr ) )
+				if ( AddEnemyDefencePlacementToWorld( curr ) )
 				{
 					ubMaxNum--;
 				}
@@ -1587,7 +1630,7 @@ void AddSoldierInitListEnemyDefenceSoldiers( UINT8 ubTotalAdmin, UINT8 ubTotalTr
 					curr->pBasicPlacement->fDetailedPlacement = FALSE;
 				}
 				*/
-				if( AddPlacementToWorld( curr ) )
+				if( AddEnemyDefencePlacementToWorld( curr ) )
 				{
 					ubMaxNum--;
 				}

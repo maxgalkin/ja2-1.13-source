@@ -85,7 +85,14 @@ typedef struct ENEMYGROUP
 	UINT8 ubNumRobots;						//number of enemy robots in the group
 	UINT8 ubRobotsInBattle;				//number of enemy robots currently in battle.
 
-	INT8	bPadding[11];
+	// ja2mod: the neural share of ubNumElites / ubElitesInBattle. A shadow counter in the
+	// turncoat style: neural soldiers are still counted as elites everywhere else, so the
+	// group-size sums and ValidateGroup need no change. Taken out of the padding so the
+	// struct keeps the size savegames store it with.
+	UINT8	ubNumElites_Neural;
+	UINT8	ubNeuralInBattle;
+
+	INT8	bPadding[9];
 }ENEMYGROUP;
 
 //NOTE:	ALL FLAGS ARE CLEARED WHENEVER A GROUP ARRIVES IN A SECTOR, OR ITS WAYPOINTS ARE

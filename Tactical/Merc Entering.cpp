@@ -1051,6 +1051,7 @@ UINT8 SpawnAirDropElite( INT32 sGridNo )
 		{
 		case SOLDIER_CLASS_ADMINISTRATOR:	pSector->ubNumAdmins++; pSector->ubAdminsInBattle++; break;
 		case SOLDIER_CLASS_ARMY:			pSector->ubNumTroops++; pSector->ubTroopsInBattle++; break;
+		case SOLDIER_CLASS_NEURAL:			pSector->ubNumElites++; pSector->ubElitesInBattle++; pSector->ubNumElites_Neural++; pSector->ubNeuralInBattle++; break;	// ja2mod
 		case SOLDIER_CLASS_ELITE:			pSector->ubNumElites++; pSector->ubElitesInBattle++; break;
 		}
 	}

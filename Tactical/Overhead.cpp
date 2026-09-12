@@ -7244,6 +7244,7 @@ void RemoveCapturedEnemiesFromSectorInfo( INT16 sMapX, INT16 sMapY, INT8 bMapZ )
 						case SOLDIER_CLASS_ADMINISTRATOR:
 						case SOLDIER_CLASS_BANDIT:			++sNumPrisoner[PRISONER_ADMIN]; break;
 						case SOLDIER_CLASS_ARMY:            ++sNumPrisoner[PRISONER_REGULAR]; break;
+						case SOLDIER_CLASS_NEURAL:          // ja2mod: held as an elite prisoner
 						case SOLDIER_CLASS_ELITE:           ++sNumPrisoner[PRISONER_ELITE]; break;
 						default:
 							// if none of the above classes, ignore this one

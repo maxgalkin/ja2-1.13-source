@@ -1215,6 +1215,7 @@ UINT32 UIHandleNewBadMerc( UI_EVENT *pUIEvent )
 				{
 					case SOLDIER_CLASS_ADMINISTRATOR:			pSector->ubNumAdmins++; pSector->ubAdminsInBattle++; break;
 					case SOLDIER_CLASS_ARMY:					pSector->ubNumTroops++; pSector->ubTroopsInBattle++; break;
+					case SOLDIER_CLASS_NEURAL:					pSector->ubNumElites++; pSector->ubElitesInBattle++; pSector->ubNumElites_Neural++; pSector->ubNeuralInBattle++; break;	// ja2mod
 					case SOLDIER_CLASS_ELITE:					pSector->ubNumElites++; pSector->ubElitesInBattle++; break;
 					case SOLDIER_CLASS_ROBOT:					pSector->ubNumRobots++; pSector->ubRobotsInBattle++; break;
 					case SOLDIER_CLASS_TANK:					pSector->ubNumTanks++;	pSector->ubTanksInBattle++;  break;
@@ -1230,6 +1231,7 @@ UINT32 UIHandleNewBadMerc( UI_EVENT *pUIEvent )
 					{
 						case SOLDIER_CLASS_ADMINISTRATOR:			pSector->ubNumAdmins++; pSector->ubAdminsInBattle++; break;
 						case SOLDIER_CLASS_ARMY:					pSector->ubNumTroops++; pSector->ubTroopsInBattle++; break;
+						case SOLDIER_CLASS_NEURAL:					pSector->ubNumElites++; pSector->ubElitesInBattle++; pSector->ubNumElites_Neural++; pSector->ubNeuralInBattle++; break;	// ja2mod
 						case SOLDIER_CLASS_ELITE:					pSector->ubNumElites++; pSector->ubElitesInBattle++; break;
 						case SOLDIER_CLASS_ROBOT:					pSector->ubNumRobots++; pSector->ubRobotsInBattle++; break;
 						case SOLDIER_CLASS_TANK:					pSector->ubNumTanks++;	pSector->ubTanksInBattle++; break;

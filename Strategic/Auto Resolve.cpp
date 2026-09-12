@@ -2324,9 +2324,22 @@ void CreateAutoResolveInterface()
 			sprintf( VObjectDesc.ImageFile, "Faces\\65Face\\%02d.sti", gMercProfiles[ ROBOT ].ubFaceIndex );
 			AddVideoObject(&VObjectDesc, &gpEnemies[index].uiVObjectID);
 		}
+		// ja2mod: the neural faction has no autoresolve counter of its own, because it is an elite
+		// everywhere the strategic layer counts. Its share is taken off the front of the elite loop,
+		// which leaves the displayed numbers and the face graphics exactly as they were.
+		UINT8 ubNeuralLeft = NeuralShareOfElites( gpAR->ubElites, 0 );
+
 		for ( i = 0; i < gpAR->ubElites; ++i, ++index )
 		{
-			gpEnemies[index].pSoldier = TacticalCreateEliteEnemy();
+			if ( ubNeuralLeft )
+			{
+				gpEnemies[index].pSoldier = TacticalCreateNeuralEnemy();
+				--ubNeuralLeft;
+			}
+			else
+			{
+				gpEnemies[index].pSoldier = TacticalCreateEliteEnemy();
+			}
 			gpEnemies[index].uiVObjectID = gpAR->iFaces;
 			if ( gpEnemies[index].pSoldier->ubBodyType == REGFEMALE )
 			{
@@ -3837,6 +3850,8 @@ FLOAT CalcClassBonusOrPenalty( SOLDIERTYPE *pSoldier )
 {
 	switch( pSoldier->ubSoldierClass )
 	{
+	// ja2mod: the neural faction fights at the elite multiplier in autoresolve.
+	case SOLDIER_CLASS_NEURAL:
 	case SOLDIER_CLASS_ELITE:
 	case SOLDIER_CLASS_ELITE_MILITIA:
 		return 1.3f;
@@ -4876,6 +4891,8 @@ void AttackTarget( SOLDIERCELL *pAttacker, SOLDIERCELL *pTarget )
 					case SOLDIER_CLASS_ROBOT :
 						gMercProfiles[ pAttacker->pSoldier->ubProfile ].records.usKillsOthers++;
 						break;
+					// ja2mod: a neural kill counts as an elite kill on a merc's record.
+					case SOLDIER_CLASS_NEURAL :
 					case SOLDIER_CLASS_ELITE :
 						gMercProfiles[ pAttacker->pSoldier->ubProfile ].records.usKillsElites++;
 						break;
@@ -5128,6 +5145,8 @@ void TargetHitCallback( SOLDIERCELL *pTarget, INT32 index )
 						case SOLDIER_CLASS_ROBOT :
 							gMercProfiles[ pKiller->pSoldier->ubProfile ].records.usKillsOthers++;
 							break;
+						// ja2mod: a neural kill counts as an elite kill on a merc's record.
+						case SOLDIER_CLASS_NEURAL :
 						case SOLDIER_CLASS_ELITE :
 							gMercProfiles[ pKiller->pSoldier->ubProfile ].records.usKillsElites++;
 							break;

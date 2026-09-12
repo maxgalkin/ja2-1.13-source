@@ -339,13 +339,26 @@ enum
 	SOLDIER_CLASS_JEEP,
 	SOLDIER_CLASS_BANDIT,
 	SOLDIER_CLASS_ROBOT,
+	// ja2mod: the neural faction. Appended after the last stock class so that the numbering
+	// of every class stored in an existing savegame stays what it was.
+	SOLDIER_CLASS_NEURAL,
 	SOLDIER_CLASS_MAX,
 };
 
 // Flugente: there are now separate gun choices, depending on a soldier's class
+// ja2mod: this is the count of the *leading* classes that own a gun and item table, and it is
+// deliberately left at its stock value: classes CREATURE..ROBOT have no table of their own and
+// must keep falling back to the SOLDIER_CLASS_NONE row. The neural class sits past that run, so
+// the tables are sized by SOLDIER_GUN_CHOICE_TABLE_SIZE and the range checks that used to read
+// "bSoldierClass >= SOLDIER_GUN_CHOICE_SELECTIONS" now ask SOLDIER_CLASS_HAS_ITEM_TABLE.
 #define SOLDIER_GUN_CHOICE_SELECTIONS SOLDIER_CLASS_CREATURE
+#define SOLDIER_GUN_CHOICE_TABLE_SIZE SOLDIER_CLASS_MAX
+#define SOLDIER_CLASS_HAS_ITEM_TABLE( bSoldierClass )	( ( ( bSoldierClass ) >= SOLDIER_CLASS_NONE && ( bSoldierClass ) < SOLDIER_GUN_CHOICE_SELECTIONS ) || ( bSoldierClass ) == SOLDIER_CLASS_NEURAL )
 
-#define SOLDIER_CLASS_ENEMY( bSoldierClass )		( ( bSoldierClass >= SOLDIER_CLASS_ADMINISTRATOR ) && ( bSoldierClass <= SOLDIER_CLASS_ARMY ) )
+// ja2mod: this used to be the range test ADMINISTRATOR..ARMY. The neural class is an enemy too,
+// and it is not adjacent to the others, so the test has to name its members. Getting this wrong
+// costs neural soldiers their LBE gear, their traits and their officer promotions.
+#define SOLDIER_CLASS_ENEMY( bSoldierClass )		( ( ( bSoldierClass ) >= SOLDIER_CLASS_ADMINISTRATOR && ( bSoldierClass ) <= SOLDIER_CLASS_ARMY ) || ( bSoldierClass ) == SOLDIER_CLASS_NEURAL )
 #define SOLDIER_CLASS_MILITIA( bSoldierClass )	( ( bSoldierClass >= SOLDIER_CLASS_GREEN_MILITIA ) && ( bSoldierClass <= SOLDIER_CLASS_ELITE_MILITIA ) )
 
 // Types of uniforms available
@@ -357,6 +370,9 @@ enum
 	UNIFORM_MILITIA_ROOKIE,
 	UNIFORM_MILITIA_REGULAR,
 	UNIFORM_MILITIA_ELITE,
+	// ja2mod: the neural faction's vest and pants palette. UniformColors.XML must carry a
+	// seventh block for it or the file fails to load.
+	UNIFORM_ENEMY_NEURAL,
 	NUM_UNIFORMS,
 };
 

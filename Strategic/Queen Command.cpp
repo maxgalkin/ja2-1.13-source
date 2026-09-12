@@ -606,7 +606,11 @@ BOOLEAN PrepareEnemyForSectorBattle()
 	GROUP *pGroup;
 	SOLDIERTYPE *pSoldier;
 	unsigned ubNumAdmins, ubNumTroops, ubNumElites, ubNumRobots, ubNumTanks, ubNumJeeps;
+	unsigned ubNumNeural = 0;	// ja2mod
 	unsigned ubTotalAdmins, ubTotalElites, ubTotalRobots, ubTotalTroops, ubTotalTanks, ubTotalJeeps;
+	// ja2mod: how many of ubTotalElites belong to the neural faction. A subset of the elite count,
+	// never added to it, so every total below keeps its stock meaning.
+	unsigned ubTotalNeural = 0;
 	unsigned totalCountOfStationaryEnemies = 0;
 	unsigned totalCountOfMobileEnemies = 0;
 	int sNumSlots;
@@ -765,6 +769,9 @@ BOOLEAN PrepareEnemyForSectorBattle()
 						case SOLDIER_CLASS_ADMINISTRATOR:
 						case SOLDIER_CLASS_BANDIT:				ubTotalAdmins++;	break;
 						case SOLDIER_CLASS_ARMY:				ubTotalTroops++;	break;
+						// ja2mod: a map placement can carry the neural class once the allocator has retagged it,
+						// and it counts as an elite here, exactly as it does everywhere else in the strategic layer.
+						case SOLDIER_CLASS_NEURAL:
 						case SOLDIER_CLASS_ELITE:				ubTotalElites++;	break;
 						case SOLDIER_CLASS_ROBOT:				ubTotalRobots++;	break;
 						case SOLDIER_CLASS_TANK:				ubTotalTanks++;		break;
@@ -816,6 +823,12 @@ BOOLEAN PrepareEnemyForSectorBattle()
 		ubTotalJeeps  = min( mapMaximumNumberOfEnemies-ubTotalAdmins-ubTotalTroops-ubTotalElites-ubTotalRobots-ubTotalTanks, ubTotalJeeps );
 	}
 
+	// ja2mod: decide the neural share of the sector's own elites before they are handed to the
+	// allocator, and remember it so that a sector re-entered later fields the same faces.
+	ubTotalNeural = NeuralShareOfElites( (UINT8)ubTotalElites, pSector->ubNumElites_Neural );
+	pSector->ubNumElites_Neural = (UINT8)ubTotalNeural;
+	pSector->ubNeuralInBattle = (UINT8)ubTotalNeural;
+
 	pSector->ubAdminsInBattle += ubTotalAdmins;
 	pSector->ubTroopsInBattle += ubTotalTroops;
 	pSector->ubElitesInBattle += ubTotalElites;
@@ -829,7 +842,10 @@ BOOLEAN PrepareEnemyForSectorBattle()
 		//if there are no troops in the current groups, then we're done.
 		if ( !ubTotalAdmins && !ubTotalTroops && !ubTotalElites && !ubTotalTanks && !ubTotalJeeps && !ubTotalRobots)
 			return FALSE;
-		AddSoldierInitListEnemyDefenceSoldiers( ubTotalAdmins, ubTotalTroops, ubTotalElites, ubTotalTanks, ubTotalJeeps, ubTotalRobots );
+		// ja2mod: note that this test build call passes tanks, jeeps and robots in an order the
+		// function does not expect. That is an upstream mistake, left alone; only the neural count
+		// is appended.
+		AddSoldierInitListEnemyDefenceSoldiers( ubTotalAdmins, ubTotalTroops, ubTotalElites, ubTotalTanks, ubTotalJeeps, ubTotalRobots, ubTotalNeural );
 		ValidateEnemiesHaveWeapons();
 		UnPauseGame();
 		return TRUE;
@@ -917,6 +933,12 @@ BOOLEAN PrepareEnemyForSectorBattle()
 				pGroup->pEnemyGroup->ubElitesInBattle += ubNumElites;
 				ubTotalElites += ubNumElites;
 
+				// ja2mod: the arriving group brings its own neural share along with its elites.
+				ubNumNeural = NeuralShareOfElites( (UINT8)ubNumElites, pGroup->pEnemyGroup->ubNumElites_Neural );
+				pGroup->pEnemyGroup->ubNumElites_Neural = (UINT8)ubNumNeural;
+				pGroup->pEnemyGroup->ubNeuralInBattle = (UINT8)ubNumNeural;
+				ubTotalNeural += ubNumNeural;
+
 				if (isTransportGroup)
 					AddToTransportGroupMap(pGroup->ubGroupID, SOLDIER_CLASS_ELITE, ubNumElites);
 			}
@@ -998,7 +1020,7 @@ BOOLEAN PrepareEnemyForSectorBattle()
 		return FALSE;
 	}
 
-	AddSoldierInitListEnemyDefenceSoldiers( ubTotalAdmins, ubTotalTroops, ubTotalElites, ubTotalRobots, ubTotalTanks, ubTotalJeeps );
+	AddSoldierInitListEnemyDefenceSoldiers( ubTotalAdmins, ubTotalTroops, ubTotalElites, ubTotalRobots, ubTotalTanks, ubTotalJeeps, ubTotalNeural );
 
 	//Now, we have to go through all of the enemies in the new map, and assign their respective groups if
 	//in a mobile group, but only for the ones that were assigned from the
@@ -1067,6 +1089,9 @@ BOOLEAN PrepareEnemyForSectorBattle()
 							firstSlot = slot + 1;
 						}
 						break;
+					// ja2mod: a neural soldier fills an elite slot in its group, because the group only ever
+					// counted it as an elite.
+					case SOLDIER_CLASS_NEURAL:
 					case SOLDIER_CLASS_ELITE:
 						if( ubNumElites )
 						{
@@ -1174,7 +1199,14 @@ BOOLEAN PrepareEnemyForUndergroundBattle()
 				pUnderground->ubRobotsInBattle += ubTotalRobots;
 				pUnderground->ubTanksInBattle += ubTotalTanks;
 				pUnderground->ubJeepsInBattle += ubTotalJeeps;
-				AddSoldierInitListEnemyDefenceSoldiers( pUnderground->ubNumAdmins, pUnderground->ubNumTroops, pUnderground->ubNumElites, pUnderground->ubNumRobots, pUnderground->ubNumTanks, pUnderground->ubNumJeeps );
+
+				// ja2mod: the underground sector keeps its own neural share, in the same shadow counter
+				// style as the surface sector above.
+				UINT8 ubUndergroundNeural = NeuralShareOfElites( pUnderground->ubNumElites, pUnderground->ubNumElites_Neural );
+				pUnderground->ubNumElites_Neural = ubUndergroundNeural;
+				pUnderground->ubNeuralInBattle = ubUndergroundNeural;
+
+				AddSoldierInitListEnemyDefenceSoldiers( pUnderground->ubNumAdmins, pUnderground->ubNumTroops, pUnderground->ubNumElites, pUnderground->ubNumRobots, pUnderground->ubNumTanks, pUnderground->ubNumJeeps, ubUndergroundNeural );
 				ValidateEnemiesHaveWeapons();
 				UnPauseGame();
 			}
@@ -1375,6 +1407,19 @@ void ProcessQueenCmdImplicationsOfDeath( SOLDIERTYPE *pSoldier )
 					pGroup->pEnemyGroup->ubRobotsInBattle--;
 				}
 				break;
+			// ja2mod: a neural soldier is an elite in every group counter, so it decrements the same
+			// pair below. The shadow counter comes down as well, or the group would keep promising
+			// neural soldiers it no longer has.
+			case SOLDIER_CLASS_NEURAL:
+				if( pGroup->pEnemyGroup->ubNumElites_Neural )
+				{
+					pGroup->pEnemyGroup->ubNumElites_Neural--;
+				}
+				if( pGroup->pEnemyGroup->ubNeuralInBattle )
+				{
+					pGroup->pEnemyGroup->ubNeuralInBattle--;
+				}
+				// and on into the elite bookkeeping
 			case SOLDIER_CLASS_ELITE:
 				#ifdef JA2BETAVERSION
 					if( !pGroup->pEnemyGroup->ubNumElites )
@@ -1534,6 +1579,17 @@ void ProcessQueenCmdImplicationsOfDeath( SOLDIERTYPE *pSoldier )
 						pSector->ubTroopsInBattle--;
 					}
 					break;
+				// ja2mod: same as the group case above, for a sector's own garrison.
+				case SOLDIER_CLASS_NEURAL:
+					if( pSector->ubNumElites_Neural )
+					{
+						pSector->ubNumElites_Neural--;
+					}
+					if( pSector->ubNeuralInBattle )
+					{
+						pSector->ubNeuralInBattle--;
+					}
+					// and on into the elite bookkeeping
 				case SOLDIER_CLASS_ELITE:
 					#ifdef JA2BETAVERSION
 						if( guiCurrentScreen == GAME_SCREEN )
@@ -1653,6 +1709,17 @@ void ProcessQueenCmdImplicationsOfDeath( SOLDIERTYPE *pSoldier )
 							pSector->ubTroopsInBattle--;
 						}
 						break;
+					// ja2mod: same again, for an underground sector.
+					case SOLDIER_CLASS_NEURAL:
+						if( pSector->ubNumElites_Neural )
+						{
+							pSector->ubNumElites_Neural--;
+						}
+						if( pSector->ubNeuralInBattle )
+						{
+							pSector->ubNeuralInBattle--;
+						}
+						// and on into the elite bookkeeping
 					case SOLDIER_CLASS_ELITE:
 						#ifdef JA2BETAVERSION
 						if( ubTotalEnemies <= (UINT32)iMaxEnemyGroupSize && pSector->ubNumElites != pSector->ubElitesInBattle ||
@@ -2248,6 +2315,16 @@ void AddEnemiesToBattle( GROUP *pGroup, UINT8 ubStrategicInsertionCode, UINT8 ub
 	}
 
 	ubTotalSoldiers = ubNumAdmins + ubNumTroops + ubNumElites + ubNumRobots + ubNumTanks + ubNumJeeps;
+
+	// ja2mod: decide how many of these elites belong to the neural faction. They are still
+	// counted as elites by ubNumElites and by every strategic counter; only the soldier that
+	// gets created below differs.
+	UINT8 ubNumNeural = NeuralShareOfElites( ubNumElites, pGroup ? pGroup->pEnemyGroup->ubNumElites_Neural : 0 );
+	if ( pGroup )
+	{
+		pGroup->pEnemyGroup->ubNumElites_Neural = ubNumNeural;
+		pGroup->pEnemyGroup->ubNeuralInBattle = ubNumNeural;
+	}
 	
 #ifdef JA2UB
 	if( gsGridNoForMapEdgePointInfo != -1 )
@@ -2304,7 +2381,16 @@ void AddEnemiesToBattle( GROUP *pGroup, UINT8 ubStrategicInsertionCode, UINT8 ub
 		{
 			ubNumElites--;
 			ubTotalSoldiers--;
-			Assert(pSoldier = TacticalCreateEliteEnemy());
+			// ja2mod: spend the neural share first, then fall back to ordinary elites
+			if ( ubNumNeural )
+			{
+				--ubNumNeural;
+				Assert(pSoldier = TacticalCreateNeuralEnemy());
+			}
+			else
+			{
+				Assert(pSoldier = TacticalCreateEliteEnemy());
+			}
 			if( pGroup )
 			{
 				pSoldier->ubGroupID = pGroup->ubGroupID;
@@ -3206,6 +3292,32 @@ void HandleBloodCatDeaths( SECTORINFO *pSector )
 }
 #endif
 
+
+// ja2mod: how many of a batch of elites are soldiers of the neural faction.
+//
+// ubRecorded is the shadow counter that the sector or the mobile group already carries. Once it
+// holds a number that number decides, so that re-entering a sector, or a second wave of the same
+// group, produces the same split rather than rolling a new one. Zero means "not decided yet", in
+// which case NEURAL_ELITE_FRACTION percent of the elites are converted.
+//
+// All three spawn dispatchers (PrepareEnemyForSectorBattle, AddEnemiesToBattle and the
+// autoresolve CreateEnemies) go through here, so the conversion rule lives in one place.
+UINT8 NeuralShareOfElites( UINT8 ubNumElites, UINT8 ubRecorded )
+{
+	if ( gGameExternalOptions.ubNeuralEliteFraction == 0 )
+	{
+		// the faction is switched off: even a sector that once had neural soldiers spawns plain
+		// elites again, which is what makes an A/B run against stock behaviour possible.
+		return 0;
+	}
+
+	if ( ubRecorded > 0 )
+	{
+		return min( ubNumElites, ubRecorded );
+	}
+
+	return (UINT8)( ubNumElites * gGameExternalOptions.ubNeuralEliteFraction / 100 );
+}
 
 UINT16 NumTurncoatsOfClassInSector( INT16 sSectorX, INT16 sSectorY, UINT8 aSoldierClass )
 {

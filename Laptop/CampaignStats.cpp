@@ -160,7 +160,8 @@ Incident_Stats::AddStat( SOLDIERTYPE* pSoldier, UINT8 aType )
 				group = CAMPAIGNHISTORY_SD_ENEMY_TANK;
 			else if ( pSoldier->ubSoldierClass == SOLDIER_CLASS_ADMINISTRATOR )
 				group = CAMPAIGNHISTORY_SD_ENEMY_ADMIN;
-			else if ( pSoldier->ubSoldierClass == SOLDIER_CLASS_ELITE )
+			// ja2mod: the neural faction is filed under elites in the campaign statistics.
+			else if ( pSoldier->ubSoldierClass == SOLDIER_CLASS_ELITE || pSoldier->ubSoldierClass == SOLDIER_CLASS_NEURAL )
 				group = CAMPAIGNHISTORY_SD_ENEMY_ELITE;
 			else if ( pSoldier->ubSoldierClass == SOLDIER_CLASS_ARMY )
 				group = CAMPAIGNHISTORY_SD_ENEMY_ARMY;

@@ -623,7 +623,8 @@ UINT16 DetermineCivQuoteEntry( SOLDIERTYPE *pCiv, UINT16 *pubCivHintToUse, BOOLE
 			return( CIV_QUOTE_ENEMY_HURT );
 		}
 		// elite?
-		else if ( pCiv->ubSoldierClass == SOLDIER_CLASS_ELITE )
+		// ja2mod: the neural faction speaks with the elite voice; it has no lines of its own.
+		else if ( pCiv->ubSoldierClass == SOLDIER_CLASS_ELITE || pCiv->ubSoldierClass == SOLDIER_CLASS_NEURAL )
 		{
 			return( CIV_QUOTE_ENEMY_ELITE );
 		}
@@ -658,7 +659,8 @@ UINT16 DetermineCivQuoteEntry( SOLDIERTYPE *pCiv, UINT16 *pubCivHintToUse, BOOLE
 			return( CIV_QUOTE_ENEMY_HURT );
 		}
 		// elite?
-		else if ( pCiv->ubSoldierClass == SOLDIER_CLASS_ELITE )
+		// ja2mod: the neural faction speaks with the elite voice; it has no lines of its own.
+		else if ( pCiv->ubSoldierClass == SOLDIER_CLASS_ELITE || pCiv->ubSoldierClass == SOLDIER_CLASS_NEURAL )
 		{
 			return( CIV_QUOTE_ENEMY_ELITE );
 		}
@@ -1621,6 +1623,7 @@ void StartEnemyTaunt( SOLDIERTYPE *pCiv, TAUNTTYPE iTauntType, SOLDIERTYPE *pTar
 				if( (zTaunt[ i ].value[TAUNT_PROFILE_ARMY] != -1 ) && !(zTaunt[ i ].value[TAUNT_PROFILE_ARMY] == pCiv->usSoldierProfile ) )
 					continue;
 				break;
+			case SOLDIER_CLASS_NEURAL:	// ja2mod: taunts with the elite set
 			case SOLDIER_CLASS_ELITE:
 				if( !(zTaunt[ i ].uiFlags2 & TAUNT_C_ELITE) )
 					continue;

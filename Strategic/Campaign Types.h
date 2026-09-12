@@ -585,7 +585,16 @@ typedef struct SECTORINFO
 
 	UINT8	ubNumRobots;
 	UINT8	ubRobotsInBattle;
-	INT8	bPadding[ 6 ];
+
+	// ja2mod: how many of ubNumElites / ubElitesInBattle above belong to the neural faction.
+	// This is a shadow counter in the turncoat style, not a fourth class counter: a neural
+	// soldier is counted as an elite everywhere else, so every population sum, every offence
+	// point calculation and every group-size assert keeps working untouched. Taken out of the
+	// padding so that the struct, which savegames store as a raw blob, keeps its size.
+	UINT8	ubNumElites_Neural;
+	UINT8	ubNeuralInBattle;
+
+	INT8	bPadding[ 4 ];
 
 }SECTORINFO;
 
@@ -637,7 +646,11 @@ typedef struct UNDERGROUND_SECTORINFO
 	UINT8	ubNumRobots;
 	UINT8	ubRobotsInBattle;
 
-	INT8	bPadding[10];
+	// ja2mod: the neural share of ubNumElites / ubElitesInBattle, see SECTORINFO above.
+	UINT8	ubNumElites_Neural;
+	UINT8	ubNeuralInBattle;
+
+	INT8	bPadding[8];
 	//no padding left!
 }UNDERGROUND_SECTORINFO;
 

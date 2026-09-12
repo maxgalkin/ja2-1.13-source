@@ -74,6 +74,9 @@ extern	INT32		gsGridNoForMapEdgePointInfo;
 BOOLEAN CheckPendingNonPlayerTeam(UINT8 usTeam);
 
 // Flugente: turncoats
+// ja2mod: the neural faction's share of a batch of elites, see the definition for the rule
+UINT8 NeuralShareOfElites( UINT8 ubNumElites, UINT8 ubRecorded );
+
 UINT16 NumTurncoatsOfClassInSector( INT16 sSectorX, INT16 sSectorY, UINT8 aSoldierClass );
 BOOLEAN TurncoatsInSector( INT16 sSectorX, INT16 sSectorY );
 bool RemoveOneTurncoat( INT16 sSectorX, INT16 sSectorY, UINT8 aSoldierClass, BOOLEAN alsoRemoveFromGroup );

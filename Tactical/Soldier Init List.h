@@ -40,7 +40,9 @@ void RemoveSoldierNodeFromInitList( SOLDIERINITNODE *pNode );
 SOLDIERINITNODE* FindSoldierInitNodeWithID( UINT16 usID );
 
 UINT8 AddSoldierInitListTeamToWorld( INT8 bTeam, UINT8 ubMaxNum );
-void AddSoldierInitListEnemyDefenceSoldiers( UINT8 ubTotalAdmin, UINT8 ubTotalTroops, UINT8 ubTotalElite, UINT8 ubTotalRobots, UINT8 ubTotalTanks, UINT8 ubTotalJeeps );
+// ja2mod: ubTotalNeural says how many of ubTotalElite are of the neural faction. It is a subset,
+// not an extra count, so callers that know nothing about the faction pass 0.
+void AddSoldierInitListEnemyDefenceSoldiers( UINT8 ubTotalAdmin, UINT8 ubTotalTroops, UINT8 ubTotalElite, UINT8 ubTotalRobots, UINT8 ubTotalTanks, UINT8 ubTotalJeeps, UINT8 ubTotalNeural );
 void AddSoldierInitListCreatures( BOOLEAN fQueen, UINT8 ubNumLarvae, UINT8 ubNumInfants,	
 																	UINT8 ubNumYoungMales, UINT8 ubNumYoungFemales, UINT8 ubNumAdultMales, 
 																	UINT8 ubNumAdultFemales );

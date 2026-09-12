@@ -7404,7 +7404,8 @@ UINT32 CalcChanceToHitGun(SOLDIERTYPE *pSoldier, INT32 sGridNo, INT16 ubAimTime,
 		iChance += ((iChance * gGameExternalOptions.sEnemyAdminCtHBonusPercent) /100);
 	else if (pSoldier->ubSoldierClass == SOLDIER_CLASS_ARMY && gGameExternalOptions.sEnemyRegularCtHBonusPercent != 0)
 		iChance += ((iChance * gGameExternalOptions.sEnemyRegularCtHBonusPercent) /100);
-	else if (pSoldier->ubSoldierClass == SOLDIER_CLASS_ELITE && gGameExternalOptions.sEnemyEliteCtHBonusPercent != 0)
+	// ja2mod: the neural faction gets the elite chance-to-hit bonus.
+	else if ((pSoldier->ubSoldierClass == SOLDIER_CLASS_ELITE || pSoldier->ubSoldierClass == SOLDIER_CLASS_NEURAL) && gGameExternalOptions.sEnemyEliteCtHBonusPercent != 0)
 		iChance += ((iChance * gGameExternalOptions.sEnemyEliteCtHBonusPercent) /100);
 	// SANDRO - option to make special NPCs stronger - chance to hit
 	if (gGameExternalOptions.usSpecialNPCStronger > 0)
@@ -9768,7 +9769,8 @@ UINT32 CalcChanceHTH( SOLDIERTYPE * pAttacker,SOLDIERTYPE *pDefender, INT16 ubAi
 		iChance += ((iChance * gGameExternalOptions.sEnemyAdminCtHBonusPercent) /100);
 	else if (pAttacker->ubSoldierClass == SOLDIER_CLASS_ARMY && gGameExternalOptions.sEnemyRegularCtHBonusPercent != 0)
 		iChance += ((iChance * gGameExternalOptions.sEnemyRegularCtHBonusPercent) /100);
-	else if (pAttacker->ubSoldierClass == SOLDIER_CLASS_ELITE && gGameExternalOptions.sEnemyEliteCtHBonusPercent != 0)
+	// ja2mod: the neural faction gets the elite chance-to-hit bonus.
+	else if ((pAttacker->ubSoldierClass == SOLDIER_CLASS_ELITE || pAttacker->ubSoldierClass == SOLDIER_CLASS_NEURAL) && gGameExternalOptions.sEnemyEliteCtHBonusPercent != 0)
 		iChance += ((iChance * gGameExternalOptions.sEnemyEliteCtHBonusPercent) /100);
 	//////////////////////////////////////////////////////////////////////////////////////
 
@@ -10516,7 +10518,8 @@ UINT32 CalcThrownChanceToHit(SOLDIERTYPE *pSoldier, INT32 sGridNo, INT16 ubAimTi
 		iChance += ((iChance * gGameExternalOptions.sEnemyAdminCtHBonusPercent) /100);
 	else if (pSoldier->ubSoldierClass == SOLDIER_CLASS_ARMY && gGameExternalOptions.sEnemyRegularCtHBonusPercent != 0)
 		iChance += ((iChance * gGameExternalOptions.sEnemyRegularCtHBonusPercent) /100);
-	else if (pSoldier->ubSoldierClass == SOLDIER_CLASS_ELITE && gGameExternalOptions.sEnemyEliteCtHBonusPercent != 0)
+	// ja2mod: the neural faction gets the elite chance-to-hit bonus.
+	else if ((pSoldier->ubSoldierClass == SOLDIER_CLASS_ELITE || pSoldier->ubSoldierClass == SOLDIER_CLASS_NEURAL) && gGameExternalOptions.sEnemyEliteCtHBonusPercent != 0)
 		iChance += ((iChance * gGameExternalOptions.sEnemyEliteCtHBonusPercent) /100);
 	//////////////////////////////////////////////////////////////////////////////////////
 
@@ -11611,7 +11614,8 @@ FLOAT CalcNewChanceToHitBaseSpecialBonus(SOLDIERTYPE *pSoldier)
 		fBaseModifier += gGameExternalOptions.sEnemyAdminCtHBonusPercent;
 	else if (pSoldier->ubSoldierClass == SOLDIER_CLASS_ARMY && gGameExternalOptions.sEnemyRegularCtHBonusPercent != 0)
 		fBaseModifier += gGameExternalOptions.sEnemyRegularCtHBonusPercent;
-	else if (pSoldier->ubSoldierClass == SOLDIER_CLASS_ELITE && gGameExternalOptions.sEnemyEliteCtHBonusPercent != 0)
+	// ja2mod: the neural faction gets the elite chance-to-hit bonus.
+	else if ((pSoldier->ubSoldierClass == SOLDIER_CLASS_ELITE || pSoldier->ubSoldierClass == SOLDIER_CLASS_NEURAL) && gGameExternalOptions.sEnemyEliteCtHBonusPercent != 0)
 		fBaseModifier += gGameExternalOptions.sEnemyEliteCtHBonusPercent;
 		
 	// SANDRO - option to make special NPCs stronger - chance to hit

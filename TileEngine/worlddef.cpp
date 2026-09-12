@@ -2693,6 +2693,7 @@ BOOLEAN EvaluateWorld(STR8 pSector, UINT8 ubLevel)
 							pSummary->ubAdminDetailed++;
 					}
 					break;
+				case SOLDIER_CLASS_NEURAL:	// ja2mod: summarised as an elite placement
 				case SOLDIER_CLASS_ELITE:
 					pSummary->ubNumElites++;
 					if(basic.fPriorityExistance)

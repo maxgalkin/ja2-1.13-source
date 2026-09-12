@@ -3026,6 +3026,7 @@ UINT8 SoldierDifficultyLevel( SOLDIERTYPE * pSoldier )
 
 		case SOLDIER_CLASS_ROBOT:
 		case SOLDIER_CLASS_ELITE:
+		case SOLDIER_CLASS_NEURAL:	// ja2mod: the neural faction is as hard to beat as the elites
 			bDifficulty = bDifficultyBase + 1;
 			break;
 
@@ -4934,7 +4935,7 @@ UINT8 SpotDangerLevel(SOLDIERTYPE *pSoldier, INT32 sGridNo)
 	if (pSoldier->aiData.bNeutral)
 		fNeutral = TRUE;
 
-	if ((pSoldier->aiData.bAlertStatus >= STATUS_RED || pSoldier->ubSoldierClass == SOLDIER_CLASS_ELITE))
+	if ((pSoldier->aiData.bAlertStatus >= STATUS_RED || pSoldier->ubSoldierClass == SOLDIER_CLASS_ELITE || pSoldier->ubSoldierClass == SOLDIER_CLASS_NEURAL))	// ja2mod
 		fAlerted = TRUE;
 
 	if (!fProfile && !fNeutral && !gGameExternalOptions.fAITacticalRetreat && NorthSpot(sGridNo, pSoldier->pathing.bLevel) ||
@@ -5493,6 +5494,13 @@ BOOLEAN CorpseEnemyTeam(ROTTING_CORPSE *pCorpse)
 		{
 			return TRUE;
 		}
+	}
+
+	// ja2mod: the neural uniform is not adjacent to the three enemy ones, so it is tested apart.
+	// Without this the AI does not recognise its own faction's corpses.
+	if (COMPARE_PALETTEREP_ID(pCorpse->def.VestPal, gUniformColors[UNIFORM_ENEMY_NEURAL].vest) && COMPARE_PALETTEREP_ID(pCorpse->def.PantsPal, gUniformColors[UNIFORM_ENEMY_NEURAL].pants))
+	{
+		return TRUE;
 	}
 
 	return FALSE;

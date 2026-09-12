@@ -365,7 +365,8 @@ namespace LogicalBodyTypes {
 			SOLDIER_CLASS_TANK,
 			SOLDIER_CLASS_JEEP,
 			SOLDIER_CLASS_BANDIT,
-			SOLDIER_CLASS_ROBOT
+			SOLDIER_CLASS_ROBOT,
+			SOLDIER_CLASS_NEURAL	// ja2mod: the count above is SOLDIER_CLASS_MAX, so the list has to match it
 		);
 
 		/*****************************************
