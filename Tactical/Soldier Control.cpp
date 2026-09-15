@@ -5709,6 +5709,62 @@ UINT16 PickSoldierReadyAnimation( SOLDIERTYPE *pSoldier, BOOLEAN fEndReady, BOOL
 // extern SOLDIERTYPE * ReduceAttackBusyGivenTarget( UINT8 ubID, UINT8 ubTargetID );
 
 
+// ja2mod 2026-09-15: covert ops assassinations. A disguised soldier who strikes from behind with a covert melee weapon
+// (a blade carrying the Covert item flag, or the garotte) keeps the disguise when the blow kills and loses it when the
+// victim lives to tell. Used by EVENT_SoldierBeginBladeAttack, EVENT_SoldierGotHit and RecognizeAsCombatant.
+static BOOLEAN IsDisguised( SOLDIERTYPE* pSoldier )
+{
+	return ( pSoldier && (pSoldier->usSoldierFlagMask & (SOLDIER_COVERT_CIV | SOLDIER_COVERT_SOLDIER)) != 0 );
+}
+
+static BOOLEAN IsCovertMeleeWeapon( UINT16 usItem )
+{
+	if ( usItem == NOTHING || usItem >= MAXITEMS )
+		return FALSE;
+
+	if ( Item[usItem].usItemClass & IC_BLADE )
+		return HasItemFlag( usItem, COVERT );
+
+	return HasItemFlag( usItem, GAROTTE );
+}
+
+// SOLDIER_BACK_ATTACK is set on the victim by EVENT_SoldierBeginBladeAttack / EVENT_SoldierBeginPunchAttack
+static BOOLEAN IsDisguisedBackAttack( SOLDIERTYPE* pAttacker, SOLDIERTYPE* pVictim )
+{
+	return ( IsDisguised( pAttacker ) && pVictim && (pVictim->usSoldierFlagMask2 & SOLDIER_BACK_ATTACK) != 0 );
+}
+
+// a victim who is still on his feet after a melee hit knows exactly who stabbed him. Same exclusions as
+// RecognizeAsCombatant: friends, neutrals, creatures, vehicles and zombies blow no covers.
+static void VictimUncoversDisguisedAttacker( SOLDIERTYPE* pVictim, SOLDIERTYPE* pAttacker )
+{
+	if ( !IsDisguised( pAttacker ) || !pVictim )
+		return;
+
+	if ( pVictim->bTeam == pAttacker->bTeam || pVictim->bSide == pAttacker->bSide || pVictim->aiData.bNeutral )
+		return;
+
+	if ( IsVehicle( pVictim ) || pVictim->bTeam == CREATURE_TEAM || pAttacker->bTeam == CREATURE_TEAM || pVictim->IsZombie() )
+		return;
+
+	pAttacker->LooseDisguise();
+
+	if ( gSkillTraitValues.fCOStripIfUncovered )
+		pAttacker->Strip();
+
+	ScreenMsg( FONT_MCOLOR_LTYELLOW, MSG_INTERFACE, szCovertTextStr[STR_COVERT_UNCOVERED], pVictim->GetName(), pAttacker->GetName() );
+
+	if ( pVictim->aiData.bAlertStatus < STATUS_BLACK )
+		pVictim->aiData.bAlertStatus = STATUS_BLACK;
+
+	pVictim->aiData.bOppList[pAttacker->ubID] = NOT_HEARD_OR_SEEN;
+
+	ManSeesMan( pVictim, pAttacker, pAttacker->sGridNo, pAttacker->pathing.bLevel, 0, 0 );
+
+	gCurrentIncident.usIncidentFlags |= INCIDENT_SPYACTION_UNCOVERED;
+}
+
+
 // ATE: THIS FUNCTION IS USED FOR ALL SOLDIER TAKE DAMAGE FUNCTIONS!
 void SOLDIERTYPE::EVENT_SoldierGotHit( UINT16 usWeaponIndex, INT16 sDamage, INT16 sBreathLoss, UINT16 bDirection, UINT16 sRange, UINT8 ubAttackerID, UINT8 ubSpecial, UINT8 ubHitLocation, INT16 sSubsequent, INT32 sLocationGrid )
 {
@@ -6107,9 +6163,20 @@ void SOLDIERTYPE::EVENT_SoldierGotHit( UINT16 usWeaponIndex, INT16 sDamage, INT1
 	// SCREAM!!!!
 	ubVolume = CalcScreamVolume( this, ubCombinedLoss );
 
+	// ja2mod 2026-09-15: a melee hit from a disguised attacker. From behind with a covert melee weapon and it kills: a
+	// clean kill, nobody screams. The victim is still standing: he uncovers the attacker whatever the sighting rules say.
+	BOOLEAN fCleanKill = FALSE;
+	if ( ubAttackerID != NOBODY && MercPtrs[ubAttackerID] && (Item[usWeaponIndex].usItemClass & (IC_BLADE | IC_PUNCH)) && IsDisguised( MercPtrs[ubAttackerID] ) )
+	{
+		if ( this->stats.bLife <= 0 )
+			fCleanKill = IsDisguisedBackAttack( MercPtrs[ubAttackerID], this ) && IsCovertMeleeWeapon( usWeaponIndex );
+		else if ( this->stats.bLife >= OKLIFE && this->bBreath > 0 && !this->bCollapsed )
+			VictimUncoversDisguisedAttacker( this, MercPtrs[ubAttackerID] );
+	}
+
 	// IF WE ARE AT A HIT_STOP ANIMATION
 	// DO APPROPRIATE HITWHILE DOWN ANIMATION
-	if ( !(gAnimControl[this->usAnimState].uiFlags & ANIM_HITSTOP) || this->usAnimState != JFK_HITDEATH_STOP )
+	if ( !fCleanKill && ( !(gAnimControl[this->usAnimState].uiFlags & ANIM_HITSTOP) || this->usAnimState != JFK_HITDEATH_STOP ) )
 	{
 		MakeNoise( this->ubID, this->sGridNo, this->pathing.bLevel, this->bOverTerrainType, ubVolume, NOISE_SCREAM );
 	}
@@ -12617,7 +12684,10 @@ void SOLDIERTYPE::EVENT_SoldierBeginBladeAttack( INT32 sGridNo, UINT8 ubDirectio
 					// IF WE ARE SEEN, MAKE SURE GUY TURNS!
 					// Get direction to target
 					// IF WE ARE AN ANIMAL, CAR, MONSTER, DONT'T TURN
-					if ( !(pTSoldier->flags.uiStatusFlags & (SOLDIER_MONSTER | SOLDIER_ANIMAL | SOLDIER_VEHICLE)) )
+					// ja2mod 2026-09-15: nor when a disguised attacker strikes from behind. Turning the victim around made him
+					// spot the "civilian" mid-stab and blow the cover before the blade had landed, which is why a knife kill
+					// from behind never stayed covert while a garotte kill (a punch attack, no forced turn) did.
+					if ( !(pTSoldier->flags.uiStatusFlags & (SOLDIER_MONSTER | SOLDIER_ANIMAL | SOLDIER_VEHICLE)) && !IsDisguisedBackAttack( this, pTSoldier ) )
 					{
 						// OK, stop merc....
 						pTSoldier->EVENT_StopMerc( pTSoldier->sGridNo, pTSoldier->ubDirection );
@@ -16178,6 +16248,9 @@ BOOLEAN		SOLDIERTYPE::RecognizeAsCombatant( UINT8 ubTargetID )
 				return FALSE;
 			else if ( pSoldier->usAnimState == PUNCH_BREATH )
 				return TRUE;
+			// ja2mod 2026-09-15: the same for a blade attack, which the original hack left out
+			else if ( pSoldier->usAnimState == STAB || pSoldier->usAnimState == CROUCH_STAB || pSoldier->usAnimState == FOCUSED_STAB || pSoldier->usAnimState == SLICE )
+				return FALSE;
 		}
 	}
 

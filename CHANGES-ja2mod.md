@@ -78,3 +78,18 @@ set to 0 no neural soldier is ever created and the game behaves exactly as stock
 | 2026-09-12 | `Tactical/XML.h` | Filenames for the new gun and item tables. |
 | 2026-09-12 | `Ja2/Init.cpp` | Loads those two tables. Unlike the stock tables the load is not fatal when the file is missing: the class then borrows the elite tables, so `ja2mod.exe` still starts against a stock `Data-1.13`. |
 | 2026-09-12 | `Ja2/GameVersion.h` | `SAVE_GAME_VERSION` bumped to 186 (`NEURAL_FACTION_SHADOW_COUNTERS`). The structure sizes are unchanged, so an older save still loads; the bump only puts the difference on record. |
+
+### Covert blades
+
+A blade carrying the `Covert` item flag is an assassination weapon for a Covert Ops
+soldier: the trait's melee chance-to-hit bonus applies to it, and against a target that
+does not have the attacker in view (attacked from behind or unaware, blinded or down) it
+rolls the garotte's instakill. A disguised soldier who kills such a target from behind
+keeps the disguise: the victim is not turned around before the blow, does not recognise
+the attacker mid-stab, and does not scream. A victim who is still on his feet afterwards
+uncovers the attacker at once. Nothing in the savegame format changes.
+
+| Date | File | Change |
+| --- | --- | --- |
+| 2026-09-15 | `Tactical/Weapons.cpp` | `MeleeTargetSeesAttacker` (from the `SOLDIER_BACK_ATTACK`/`SOLDIER_SNEAK_ATTACK` flags, collapse and blindness) replaces the "can the target see us" line-of-sight test of the garotte code in `CalcChanceHTH` and `HTHImpact`, which was taken from the attacker's side and therefore always true for an adjacent target. `CalcChanceHTH`: a Covert-flagged blade adds `COVERT_MELEE_CTH_BONUS` per Covert Ops level in the stab branch. `HTHImpact`: a Covert-flagged blade rolls the garotte instakill when the target does not see the attacker; the weapon-status scaling of the roll no longer collapses to zero for any status below 100 (integer division). |
+| 2026-09-15 | `Tactical/Soldier Control.cpp` | Helpers `IsDisguised`, `IsCovertMeleeWeapon`, `IsDisguisedBackAttack`, `VictimUncoversDisguisedAttacker`. `EVENT_SoldierBeginBladeAttack` no longer turns the victim to face a disguised attacker who strikes from behind. `RecognizeAsCombatant` extends the punch-attack exemption to the four blade animations. `EVENT_SoldierGotHit`: no scream when a disguised attacker kills from behind with a covert melee weapon; a victim who stays on his feet after a melee hit from a disguised attacker uncovers him. |

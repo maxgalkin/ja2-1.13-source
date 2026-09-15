@@ -8770,6 +8770,24 @@ INT32 BulletImpact( SOLDIERTYPE *pFirer, BULLET *pBullet, SOLDIERTYPE * pTarget,
 	return( iImpact );
 }
 
+// ja2mod 2026-09-15: does the target of a melee attack have the attacker in view? The covert ops melee code used to
+// answer this with a line-of-sight test taken from the attacker's side, which is always true for an adjacent target.
+// The flags are set on the target by EVENT_SoldierBeginBladeAttack / EVENT_SoldierBeginPunchAttack, so this also
+// works without the limited-vision option, where a soldier otherwise sees in every direction.
+static BOOLEAN MeleeTargetSeesAttacker( SOLDIERTYPE* pTarget )
+{
+	if ( !pTarget )
+		return TRUE;
+
+	if ( pTarget->bCollapsed || pTarget->bBlindedCounter > 0 )
+		return FALSE;
+
+	if ( pTarget->usSoldierFlagMask2 & (SOLDIER_BACK_ATTACK | SOLDIER_SNEAK_ATTACK) )
+		return FALSE;
+
+	return TRUE;
+}
+
 INT32 HTHImpact( SOLDIERTYPE * pSoldier, SOLDIERTYPE * pTarget, INT32 iHitBy, BOOLEAN fBladeAttack )
 {
 	////////////////////////////////////////////
@@ -9011,30 +9029,42 @@ INT32 HTHImpact( SOLDIERTYPE * pSoldier, SOLDIERTYPE * pTarget, INT32 iHitBy, BO
 
 	// Flugente: if we are using a garotte, there is a chance that we score an instakill
 	// our level in covert ops and wether the target is aware of us has a huge impact
-	if ( !autoresolve && pObj && HasItemFlag(pObj->usItem, GAROTTE) )
+	// ja2mod 2026-09-15: a blade carrying the Covert item flag rolls the same instakill, but only against a target that
+	// does not have the attacker in view - it is an assassination move, not a knife-fighting one. The garotte keeps rolling
+	// in the open as before.
+	if ( !autoresolve && pObj )
 	{
-		INT32 instakillchance = 0;
-		INT32 resistchance = 20;
+		BOOLEAN fTargetSeesUs = MeleeTargetSeesAttacker( pTarget );
+		BOOLEAN fGarotte = HasItemFlag( pObj->usItem, GAROTTE );
+		BOOLEAN fCovertBlade = fBladeAttack && !fTargetSeesUs && HasItemFlag( pObj->usItem, COVERT );
 
-		if ( !SoldierTo3DLocationLineOfSightTest( pSoldier, pTarget->sGridNo, pTarget->pathing.bLevel, 3, TRUE, CALC_FROM_WANTED_DIR ) )
-			instakillchance += 30;
+		if ( fGarotte || fCovertBlade )
+		{
+			INT32 instakillchance = 0;
+			INT32 resistchance = 20;
 
-		UINT8 skilllevel = NUM_SKILL_TRAITS( pSoldier, COVERT_NT );
-		instakillchance += skilllevel * gSkillTraitValues.sCoMeleeInstakillBonus;
+			// ja2mod: was a line-of-sight test from the attacker's side, which never failed for an adjacent target
+			if ( !fTargetSeesUs )
+				instakillchance += 30;
 
-		if ( pTarget->aiData.bAlertStatus == STATUS_YELLOW )
-			resistchance += 20;
-		else if ( pTarget->aiData.bAlertStatus >= STATUS_RED )
-			resistchance += 50;
+			UINT8 skilllevel = NUM_SKILL_TRAITS( pSoldier, COVERT_NT );
+			instakillchance += skilllevel * gSkillTraitValues.sCoMeleeInstakillBonus;
 
-		if ( pTarget->bCollapsed )
-			resistchance = 0;
+			if ( pTarget->aiData.bAlertStatus == STATUS_YELLOW )
+				resistchance += 20;
+			else if ( pTarget->aiData.bAlertStatus >= STATUS_RED )
+				resistchance += 50;
 
-		// killchance gets lowered if garotte is in bad shape
-		instakillchance *= ( (*pObj)[0]->data.objectStatus / 100 );
+			if ( pTarget->bCollapsed )
+				resistchance = 0;
 
-		if ( Random(instakillchance) >= Random(resistchance) )
-			iImpact += 500;
+			// killchance gets lowered if the weapon is in bad shape
+			// ja2mod: the integer division in "*= status / 100" made this 0 for any status below 100
+			instakillchance = instakillchance * (*pObj)[0]->data.objectStatus / 100;
+
+			if ( Random(instakillchance) >= Random(resistchance) )
+				iImpact += 500;
+		}
 	}
 
 	// apply all bonuses
@@ -9335,6 +9365,13 @@ UINT32 CalcChanceHTH( SOLDIERTYPE * pAttacker,SOLDIERTYPE *pDefender, INT16 ubAi
 			{
 				iAttRating += gSkillTraitValues.ubMECtHBladesBonus;
 			}
+
+			// ja2mod 2026-09-15: covert ops get their melee bonus with a blade that carries the Covert item flag, the same
+			// bonus the garotte grants. The blade stays a blade: none of the garotte's handling maluses apply.
+			if ( HasItemFlag( usInHand, COVERT ) )
+			{
+				iAttRating += NUM_SKILL_TRAITS( pAttacker, COVERT_NT ) * gSkillTraitValues.sCOMeleeCTHBonus;
+			}
 		}
 		else if (HAS_SKILL_TRAIT( pAttacker, KNIFING_OT ))
 		{
@@ -9361,7 +9398,9 @@ UINT32 CalcChanceHTH( SOLDIERTYPE * pAttacker,SOLDIERTYPE *pDefender, INT16 ubAi
 					garottemodifier += 80;
 
 				// if this guy can see us, get a big malus!
-				else if ( SoldierTo3DLocationLineOfSightTest( pAttacker, pDefender->sGridNo, pDefender->pathing.bLevel, 3, TRUE, CALC_FROM_WANTED_DIR ) )
+				// ja2mod 2026-09-15: was a line-of-sight test from the attacker's side, which never failed for an adjacent
+				// target, so the malus applied to every garotte attack, from behind or not
+				else if ( MeleeTargetSeesAttacker( pDefender ) )
 					garottemodifier -= 80;
 
 				iAttRating += garottemodifier;
