@@ -30,6 +30,7 @@
 #include "Debug Control.h"
 
 #include "connect.h"
+#include "../ModularizedTacticalAI/include/NeuralHooks.h"
 
 //forward declarations of common classes to eliminate includes
 class OBJECTTYPE;
@@ -641,6 +642,7 @@ void AddSmokeEffectToTile( INT32 iSmokeEffectID, INT8 bType, INT32 sGridNo, INT8
 
 	// Set world flags
 	gpWorldLevelData[ sGridNo ].ubExtFlags[ bLevel ] |= FromSmokeTypeToWorldFlags( bType );
+	tacnn::OnWorldChanged();
 
 	// All done...
 
@@ -683,6 +685,7 @@ void RemoveSmokeEffectFromTile( INT32 sGridNo, INT8 bLevel )
 	if ( GetCachedAniTileOfType( sGridNo, ubLevelID, ANITILE_SMOKE_EFFECT ) == NULL )
 	{
 		gpWorldLevelData[ sGridNo ].ubExtFlags[ bLevel ] &= ( ~ANY_SMOKE_EFFECT );
+		tacnn::OnWorldChanged();
 	}
 }
 

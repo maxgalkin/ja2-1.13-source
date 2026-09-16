@@ -56,6 +56,10 @@
 #include "PlanFactoryLibrary.h"
 #include "AbstractPlanFactory.h"
 
+#include "NeuralHooks.h" // ja2mod 2026-09-15: observation logging, sidecar, situation export
+#include "AIRandom.h"    // ja2mod 2026-09-15: seeded AI randomness
+#include "Harness.h"     // ja2mod 2026-09-15: battle harness drives the player's mercs
+
 #ifdef JA2UB
 #include "Ja25_Tactical.h"
 #include "Ja25 Strategic Ai.h"
@@ -406,6 +410,9 @@ BOOLEAN AimingGun(SOLDIERTYPE *pSoldier)
 
 void HandleSoldierAI( SOLDIERTYPE *pSoldier ) // FIXME - this function is named inappropriately
 {
+	// ja2mod 2026-09-15: every die this soldier's AI rolls below comes from the seeded stream when NEURAL_AI_SEED is set
+	tacnn::AIRandomScope aiRandomScope( !(pSoldier->flags.uiStatusFlags & SOLDIER_PC) || tacnn::HarnessDrivesPlayerTeam() );
+
 	// ATE
 	// Bail if we are engaged in a NPC conversation/ and/or sequence ... or we have a pause because 
 	// we just saw someone... or if there are bombs on the bomb queue
@@ -423,7 +430,8 @@ void HandleSoldierAI( SOLDIERTYPE *pSoldier ) // FIXME - this function is named 
 	{
 		// if we're in autobandage, or the AI control flag is set and the player has a quote record to perform, or is a boxer,
 		// let AI process this merc; otherwise abort
-		if ( !(gTacticalStatus.fAutoBandageMode) && !(pSoldier->flags.uiStatusFlags & SOLDIER_PCUNDERAICONTROL && (pSoldier->ubQuoteRecord != 0 || pSoldier->flags.uiStatusFlags & SOLDIER_BOXER) ) )
+		// ja2mod 2026-09-15: the battle harness hands the player's mercs to the AI as well
+		if ( !tacnn::HarnessDrivesPlayerTeam() && !(gTacticalStatus.fAutoBandageMode) && !(pSoldier->flags.uiStatusFlags & SOLDIER_PCUNDERAICONTROL && (pSoldier->ubQuoteRecord != 0 || pSoldier->flags.uiStatusFlags & SOLDIER_BOXER) ) )
 		{
 			// patch...
 			if ( pSoldier->aiData.fAIFlags & AI_HANDLE_EVERY_FRAME )
@@ -1032,6 +1040,10 @@ void StartNPCAI(SOLDIERTYPE *pSoldier)
 
 	pSoldier->sLastTwoLocations[0] = NOWHERE;
 	pSoldier->sLastTwoLocations[1] = NOWHERE;
+
+	// ja2mod 2026-09-15: the situation exporter records the world as the Python harness sees it, before RefreshAI
+	tacnn::AIRandomScope aiRandomScope( !(pSoldier->flags.uiStatusFlags & SOLDIER_PC) || tacnn::HarnessDrivesPlayerTeam() );
+	tacnn::OnStartNPCAI( pSoldier );
 
 	RefreshAI(pSoldier);
 
@@ -1728,6 +1740,7 @@ void TurnBasedHandleNPCAI(SOLDIERTYPE *pSoldier)
 					pSoldier->ai_masterplan_ = plan_lib->create_plan(pSoldier->bAIIndex, pSoldier, ai_input);
 				}
 				AI::tactical::PlanInputData plan_input(true, gTacticalStatus);
+				tacnn::HarnessProfileScope decideTime( tacnn::HB_DECIDE ); // ja2mod 2026-09-16: frame profile, no-op without the harness
 				pSoldier->ai_masterplan_->execute(plan_input);
 			}
 		}
@@ -2879,7 +2892,9 @@ void ManChecksOnFriends(SOLDIERTYPE *pSoldier)
 
 void SetNewSituation( SOLDIERTYPE * pSoldier )
 {
-	if ( pSoldier->bTeam != gbPlayerNum )
+	// ja2mod 2026-09-15: the battle harness's mercs rethink like the AI does; the player's sighting halt
+	// cancels their shot (HaultSoldierFromSighting) and without this flag the AI would wait for it forever
+	if ( pSoldier->bTeam != gbPlayerNum || tacnn::HarnessDrivesPlayerTeam() )
 	{
 		if ( pSoldier->ubQuoteRecord == 0 && !gTacticalStatus.fAutoBandageMode && !(pSoldier->aiData.bNeutral && gTacticalStatus.uiFlags & ENGAGED_IN_CONV) )
 		{

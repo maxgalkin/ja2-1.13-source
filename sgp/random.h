@@ -20,11 +20,23 @@ extern UINT32 GetRndNum(UINT32 maxnum);
 extern bool gfMPDebugOutputRandoms;
 
 UINT32 NewRandom(UINT32 max);
+// ja2mod 2026-09-15: restart the game generators from a seed (battle harness)
+void SeedGameRandom(UINT32 uiSeed);
 
 extern GAME_EXTERNAL_OPTIONS gGameExternalOptions;
 
+// ja2mod 2026-09-15: while an AI decision is being made (guiAIRandomDepth > 0)
+// the dice come from ModularizedTacticalAI/AIRandom.cpp, which either uses its
+// own seeded stream (NEURAL_AI_SEED) or falls back to the generators below and
+// records the values for the situation exporter. Outside a scope the game's
+// generator is used directly, as before.
+extern unsigned int guiAIRandomDepth;
+UINT32 AIRandomDraw(UINT32 uiRange);
+
 inline UINT32 Random(UINT32 uiRange)
 {
+	if (guiAIRandomDepth)	// ja2mod
+		return AIRandomDraw(uiRange);
 	if (gGameExternalOptions.fNewRandom)
 		return NewRandom(uiRange);
 	else

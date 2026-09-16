@@ -13,6 +13,7 @@
 	#include "input.h"
 	#include "random.h"
 	#include "gameloop.h"
+	#include "Harness.h"	// ja2mod 2026-09-15: battle harness (options from [Ja2 Settings])
 	#include "soundman.h"
 		#include "JA2 Splash.h"
 		#include "Timer Control.h"
@@ -1036,6 +1037,37 @@ void GetRuntimeSettings( )
 
 	g_bUseXML_Strings		= oProps.getBoolProperty(L"Ja2 Settings", L"USE_XML_STRINGS", false);
 	s_bExportStrings		= oProps.getBoolProperty(L"Ja2 Settings", L"EXPORT_STRINGS", false);
+
+	// ja2mod 2026-09-15: the battle harness; every key can come from the command line as -KEY=VALUE
+	// (see ModularizedTacticalAI/include/Harness.h). Without NEURAL_HARNESS nothing below has an effect.
+	{
+		tacnn::HarnessOptions harness;
+		harness.enabled			= oProps.getBoolProperty(L"Ja2 Settings", L"NEURAL_HARNESS", false);
+		harness.slot			= (int)oProps.getIntProperty(L"Ja2 Settings", L"HARNESS_SLOT", 0);
+		harness.battles			= (int)oProps.getIntProperty(L"Ja2 Settings", L"HARNESS_BATTLES", 1);
+		harness.seed			= (unsigned)oProps.getIntProperty(L"Ja2 Settings", L"HARNESS_SEED", 1);
+		harness.outDir			= oProps.getStringProperty(L"Ja2 Settings", L"HARNESS_OUT", L"tacnn-harness").utf8();
+		harness.fastForward		= oProps.getBoolProperty(L"Ja2 Settings", L"HARNESS_FF", true);
+		harness.fastForwardMicros = (int)oProps.getIntProperty(L"Ja2 Settings", L"HARNESS_FF_US", 100);
+		harness.render			= oProps.getBoolProperty(L"Ja2 Settings", L"HARNESS_RENDER", false);
+		harness.maxTurns		= (int)oProps.getIntProperty(L"Ja2 Settings", L"HARNESS_MAX_TURNS", 40);
+		harness.timeoutSeconds	= (int)oProps.getIntProperty(L"Ja2 Settings", L"HARNESS_TIMEOUT_S", 900);
+		harness.deadlockSeconds	= (int)oProps.getIntProperty(L"Ja2 Settings", L"HARNESS_DEADLOCK_S", 5);
+		harness.lapseSeconds	= (int)oProps.getIntProperty(L"Ja2 Settings", L"HARNESS_LAPSE_S", 45);
+		harness.enemies			= (int)oProps.getIntProperty(L"Ja2 Settings", L"HARNESS_ENEMIES", 0);
+		harness.elites			= (int)oProps.getIntProperty(L"Ja2 Settings", L"HARNESS_ELITES", 0);
+		harness.enemyEdge		= (int)oProps.getIntProperty(L"Ja2 Settings", L"HARNESS_ENEMY_EDGE", 0);
+		harness.enemyAlert		= (int)oProps.getIntProperty(L"Ja2 Settings", L"HARNESS_ENEMY_ALERT", -1);
+		harness.forceTurnMode	= oProps.getBoolProperty(L"Ja2 Settings", L"HARNESS_FORCE_TB", true);
+		harness.quietTurns		= (int)oProps.getIntProperty(L"Ja2 Settings", L"HARNESS_QUIET_TURNS", 0);
+		harness.radar			= oProps.getBoolProperty(L"Ja2 Settings", L"HARNESS_RADAR", true);
+		harness.aiLog			= oProps.getBoolProperty(L"Ja2 Settings", L"HARNESS_AI_LOG", false);
+		harness.neuralAll		= oProps.getBoolProperty(L"Ja2 Settings", L"HARNESS_NEURAL_ALL", false);
+		harness.neuralMode		= oProps.getStringProperty(L"Ja2 Settings", L"HARNESS_NEURAL_MODE", L"").utf8();
+		harness.neuralModel		= oProps.getStringProperty(L"Ja2 Settings", L"HARNESS_NEURAL_MODEL", L"").utf8();
+		harness.logPlayer		= oProps.getBoolProperty(L"Ja2 Settings", L"HARNESS_LOG_PLAYER", true);
+		tacnn::HarnessSetOptions(harness);
+	}
 
 	sp_force_load_jsd_xml_file = oProps.getStringProperty(L"Ja2 Settings", L"FORCE_LOAD_JSD_XML_FILE", L"");
 

@@ -17,6 +17,7 @@
 #include "../../Utils/Font Control.h"           // ScreenMsg about deadlock
 #include <Text.h>                               // Sniper warning
 #include "../../Utils/message.h"                // ditto
+#include "../include/NeuralHooks.h"             // ja2mod 2026-09-15: decision log, situation export
 
 
 namespace AI
@@ -31,6 +32,9 @@ namespace AI
 
         void LegacyAIPlan::execute(PlanInputData& environment)
         {
+            // ja2mod 2026-09-15: records the decision the tree below makes, on every return path
+            tacnn::LegacyDecisionScope decisionScope(get_npc(), environment.turn_based());
+
             if(!environment.turn_based())
             {
                 if ( (get_npc()->ubProfile != NO_PROFILE) && (gMercProfiles[ get_npc()->ubProfile ].ubMiscFlags3 & PROFILE_MISC_FLAG3_HANDLE_DONE_TRAVERSAL ) )

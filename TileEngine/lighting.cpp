@@ -28,6 +28,7 @@
 	#include "Shade Table Util.h"
 	#include "Rotting Corpses.h"
 	#include "PATHAI.H"
+	#include "../ModularizedTacticalAI/include/NeuralHooks.h" // ja2mod 2026-09-16: line-of-sight memo invalidation
 
 #define LVL1_L1_PER			(50)
 #define LVL1_L2_PER			(50)
@@ -3139,6 +3140,7 @@ INT32 LightSpriteCreate(STR pName, UINT32 uiLightType)
 {
 	INT32 iSprite;
 
+	tacnn::OnWorldChanged(); // ja2mod 2026-09-16
 	iSprite = LightSpriteGetFree();
 
 	if( iSprite != -1 )
@@ -3197,6 +3199,8 @@ BOOLEAN LightSpriteDestroy(INT32 iSprite)
 	{
 		return FALSE;
 	}
+
+	tacnn::OnWorldChanged(); // ja2mod 2026-09-16
 
 	if(LightSprites[iSprite].uiFlags&LIGHT_SPR_ACTIVE)
 	{
@@ -3313,6 +3317,8 @@ BOOLEAN LightSpritePosition(INT32 iSprite, INT16 iX, INT16 iY)
 		return FALSE;
 	}
 
+	tacnn::OnWorldChanged(); // ja2mod 2026-09-16
+
 	if(LightSprites[iSprite].uiFlags&LIGHT_SPR_ACTIVE)
 	{
 		if((LightSprites[iSprite].iX==iX) && (LightSprites[iSprite].iY==iY))
@@ -3413,6 +3419,8 @@ BOOLEAN LightSpritePower(INT32 iSprite, BOOLEAN fOn)
 	{
 		return FALSE;
 	}
+
+	tacnn::OnWorldChanged(); // ja2mod 2026-09-16
 
 	if(fOn)
 	{

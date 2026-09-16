@@ -151,6 +151,7 @@ extern BOOLEAN gfShiftBombPlant;
 
 #define		MIN_SUBSEQUENT_SNDS_DELAY									2000
 #include "connect.h"
+#include "../ModularizedTacticalAI/include/NeuralHooks.h" // ja2mod 2026-09-15: damage outcome for the decision log
 
 extern void TeleportSelectedSoldier( void );
 extern BOOLEAN AddSoldierToSectorNoCalculateDirectionUseAnimation( UINT8 ubID, UINT16 usAnimState, UINT16 usAnimCode );
@@ -9996,6 +9997,9 @@ UINT8 SOLDIERTYPE::SoldierTakeDamage( INT8 bHeight, INT16 sLifeDeduct, INT16 sBr
 	UINT16		usItemFlags = 0; // Kaiden: Needed for the reveal all items after combat code from UB.
 
 	this->ubLastDamageReason = ubReason;
+
+	// ja2mod 2026-09-15: an outcome event for the decision log and a belief that someone hit us
+	tacnn::OnSoldierTakeDamage( this, ubAttacker, sLifeDeduct, sBreathLoss, ubReason );
 		
 	// Flugente: dynamic opinions
 	if (ubAttacker != NOBODY && MercPtrs[ubAttacker] )

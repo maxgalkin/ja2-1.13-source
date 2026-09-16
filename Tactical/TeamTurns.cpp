@@ -56,6 +56,8 @@
 class OBJECTTYPE;
 class SOLDIERTYPE;
 #include "connect.h"
+#include "../ModularizedTacticalAI/include/NeuralHooks.h" // ja2mod 2026-09-15: turn counter for the belief store
+#include "../ModularizedTacticalAI/include/Harness.h" // ja2mod 2026-09-15: battle harness drives the player team
 
 extern INT8 STRAIGHT;
 //extern UINT8 gubSpeedUpAnimationFactor;
@@ -565,6 +567,10 @@ void BeginTeamTurn( UINT8 ubTeam )
 			// skip back to the top, as we are processing another team now.
 			continue;
 		}
+
+		// ja2mod 2026-09-15: the belief store ages its records by team turns, and the battle harness counts them;
+		// called here, after the inactive teams were skipped, so ubTeam is the team whose turn begins
+		tacnn::OnBeginTeamTurn( ubTeam );
 
 		if ( gTacticalStatus.uiFlags & TURNBASED )
 		{
@@ -1257,6 +1263,9 @@ void EndInterrupt( BOOLEAN fMarkInterruptOccurred )
 		// switch appropriate messages & flags
 		if ( pSoldier->bTeam == OUR_TEAM)
 		{
+			// ja2mod 2026-09-15: the battle harness drives this team through the AI; a merc the interrupt cut short decides afresh
+			tacnn::HarnessOnInterruptEnded();
+
 			// set everyone on the team to however they were set moved before the interrupt
 			// must do this before selecting soldier...
 			/*

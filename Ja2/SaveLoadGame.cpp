@@ -108,6 +108,7 @@
 	#include "ASD.h"				// added by Flugente
 	#include "MilitiaIndividual.h"	// added by Flugente
 	#include "Rebel Command.h"
+	#include "NeuralHooks.h" // ja2mod 2026-09-15: belief store in the save
 
 #include		"BobbyR.h"
 #include		"IMP Portraits.h"
@@ -4631,6 +4632,13 @@ BOOLEAN SaveGame( int ubSaveGameID, STR16 pGameDesc )
 		ScreenMsg( FONT_MCOLOR_WHITE, MSG_ERROR, L"ERROR writing rebel command data" );
 		goto FAILED_TO_SAVE;
 	}
+
+	// ja2mod 2026-09-15: the neural AI's belief store (BELIEF_STORE_IN_SAVE)
+	if ( !tacnn::SaveNeuralState( hFile ) )
+	{
+		ScreenMsg( FONT_MCOLOR_WHITE, MSG_ERROR, L"ERROR writing neural AI belief data" );
+		goto FAILED_TO_SAVE;
+	}
 #if LOADSAVEGAME_LOGTIME
 	TimingLog("File read done", 10);
 #endif
@@ -6464,6 +6472,14 @@ BOOLEAN LoadSavedGame( int ubSavedGameID )
 	if ( !RebelCommand::Load( hFile ) )
 	{
 		DebugMsg( TOPIC_JA2, DBG_LEVEL_3, String( "Rebel Command data Load failed" ) );
+		FileClose( hFile );
+		return(FALSE);
+	}
+
+	// ja2mod 2026-09-15: the neural AI's belief store; saves older than BELIEF_STORE_IN_SAVE have none
+	if ( !tacnn::LoadNeuralState( hFile, guiCurrentSaveGameVersion ) )
+	{
+		DebugMsg( TOPIC_JA2, DBG_LEVEL_3, String( "Neural AI belief data Load failed" ) );
 		FileClose( hFile );
 		return(FALSE);
 	}

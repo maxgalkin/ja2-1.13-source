@@ -41,6 +41,9 @@ const inline UINT32 TIME_MS_TO_US(UINT32 value) { return value * 1000; }
 
 UINT32   giFastForwardPeriod = FASTFORWARDTIMESLICE;
 BOOLEAN giFastForwardMode = FALSE;
+// ja2mod 2026-09-15: the battle harness keeps fast forward on for every turn; the places that switch
+// giFastForwardMode off (player turn, dialogue, visible enemies) do not touch this flag
+BOOLEAN gfHarnessFastForward = FALSE;
 INT32   giFastForwardKey = 0;
 UINT32  guiTimeSlice = 0;
 FLOAT gfClockSpeedPercent = 1.0;
@@ -645,7 +648,7 @@ void SetFastForwardMode(BOOLEAN enable)
 
 BOOLEAN IsFastForwardMode()
 {
-	return giFastForwardMode || IsFastForwardKeyPressed();
+	return giFastForwardMode || gfHarnessFastForward || IsFastForwardKeyPressed();
 }
 
 LONGLONG GetJA2Microseconds()
@@ -837,7 +840,7 @@ void UpdateTimer()
 	// Set timer at lowest resolution. Could use middle of lowest/highest, we'll see how this performs first
 	if (!IsHiSpeedClockMode())
 	{
-		UINT uiTimeSlice = giFastForwardMode ? gtc.wPeriodMin : max(gtc.wPeriodMin, TIME_US_TO_MS(UPDATETIMESLICE));
+		UINT uiTimeSlice = (giFastForwardMode || gfHarnessFastForward) ? gtc.wPeriodMin : max(gtc.wPeriodMin, TIME_US_TO_MS(UPDATETIMESLICE));
 		if (uiTimeSlice != guiTimeSlice)
 		{
 			guiTimeSlice = uiTimeSlice;

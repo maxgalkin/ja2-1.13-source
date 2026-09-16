@@ -51,6 +51,7 @@ class SOLDIERTYPE;
 #include "BinaryHeap.hpp"
 #include "opplist.h"
 #include "Weapons.h"
+#include "../ModularizedTacticalAI/include/AIRandom.h" // ja2mod 2026-09-16: skip-list dice stay out of the AI roll record
 extern BOOLEAN gubWorldTileInLight[MAX_ALLOWED_WORLD_MAX];
 extern BOOLEAN gubIsCorpseThere[MAX_ALLOWED_WORLD_MAX];
 extern INT32 gubMerkCanSeeThisTile[MAX_ALLOWED_WORLD_MAX];
@@ -2099,6 +2100,8 @@ bool AStarPathfinder::IsSomeoneInTheWay()
 INT8 RandomSkipListLevel( void )
 {
 	INT8 bLevel = 1;
+	// ja2mod 2026-09-16: the level shapes the search queue, not the decision; the parity replay must not see these rolls
+	tacnn::AIRandomUnrecorded unrecorded;
 
 	while( Random( 4 ) == 0 && bLevel < iMaxSkipListLevel - 1)
 	{

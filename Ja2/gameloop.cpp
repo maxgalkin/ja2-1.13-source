@@ -50,6 +50,7 @@
 
 //network headers
 #include "connect.h"
+#include "Harness.h"	// ja2mod 2026-09-15: battle harness
 
 UINT32 guiCurrentScreen;
 UINT32 guiPendingScreen = NO_PENDING_SCREEN;
@@ -391,6 +392,10 @@ void GameLoop(void)
 		guiPendingScreen = NO_PENDING_SCREEN;
 
 	}
+
+	// ja2mod 2026-09-15: the battle harness plays the frame before the screen does (off unless NEURAL_HARNESS)
+	if ( tacnn::HarnessTick() )
+		gfSkipFrame = TRUE;
 
 	//DebugMsg (TOPIC_JA2,DBG_LEVEL_3,"GameLoop: screen changed");
 	AssertNotNIL (GameScreens[guiCurrentScreen].HandleScreen);

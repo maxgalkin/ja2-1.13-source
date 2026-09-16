@@ -47,6 +47,7 @@
 	#include "Soldier Ani.h"
 	#include "ASD.h"		// added by Flugente
 	#include "renderworld.h"		// added by Flugente for SetRenderFlags( RENDER_FLAG_FULL );
+	#include "../ModularizedTacticalAI/include/NeuralHooks.h" // ja2mod 2026-09-16: line-of-sight memo invalidation
 
 #ifdef COUNT_PATHS
 	extern UINT32 guiSuccessfulPathChecks;
@@ -1210,6 +1211,11 @@ BOOLEAN AddStructureToWorld( INT32 sBaseGridNo, INT8 bLevel, DB_STRUCTURE_REF * 
 {
 	STRUCTURE * pStructure;
 
+	// ja2mod 2026-09-16: a person's own structure comes and goes with every step and does not bend sight lines
+	if ( pLevelN == NULL || !( ((LEVELNODE *) pLevelN)->uiFlags & LEVELNODE_SOLDIER ) )
+	{
+		tacnn::OnWorldChanged();
+	}
 	pStructure = InternalAddStructureToWorld( sBaseGridNo, bLevel, pDBStructureRef, (LEVELNODE *) pLevelN );
 	if (pStructure == NULL)
 	{
@@ -1281,6 +1287,10 @@ BOOLEAN DeleteStructureFromWorld( STRUCTURE * pStructure )
 
 	CHECKF( pStructure );
 
+	if ( !( pStructure->fFlags & STRUCTURE_PERSON ) )
+	{
+		tacnn::OnWorldChanged(); // ja2mod 2026-09-16
+	}
 	pBaseStructure = FindBaseStructure( pStructure );
 	CHECKF( pBaseStructure );
 
@@ -1359,6 +1369,7 @@ STRUCTURE * InternalSwapStructureForPartner( INT32 sGridNo, STRUCTURE * pStructu
 	{
 		return( NULL );
 	}
+	tacnn::OnWorldChanged(); // ja2mod 2026-09-16: a door or window changes state
 	fDoor = ((pBaseStructure->fFlags & STRUCTURE_ANYDOOR) > 0);
 	pLevelNode = FindLevelNodeBasedOnStructure( pBaseStructure->sGridNo, pBaseStructure );
 	if (pLevelNode == NULL)

@@ -50,6 +50,10 @@ void			DoneFadeInForSaveLoadScreen( void );
 
 BOOLEAN DoQuickSave();
 BOOLEAN DoQuickLoad();
+// ja2mod 2026-09-15: battle harness; DoQuickLoad for any slot
+BOOLEAN DoQuickLoadSlot( INT32 iSlot );
+// ja2mod 2026-09-15: battle harness; confirm Load for a slot on an idle save/load screen
+BOOLEAN SaveLoadScreenAutoLoad( INT32 iSlot );
 
 BOOLEAN IsThereAnySavedGameFiles();
 

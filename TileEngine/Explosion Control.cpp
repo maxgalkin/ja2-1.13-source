@@ -53,6 +53,8 @@
 #include "ub_config.h"
 #endif
 
+#include "../ModularizedTacticalAI/include/NeuralHooks.h" // ja2mod 2026-09-16: line-of-sight memo invalidation
+
 
 //forward declarations of common classes to eliminate includes
 class OBJECTTYPE;
@@ -2917,6 +2919,7 @@ void GetRayStopInfo( UINT32 uiNewSpot, UINT8 ubDir, INT8 bLevel, BOOLEAN fSmokeE
 
 void SpreadEffect( INT32 sGridNo, UINT8 ubRadius, UINT16 usItem, UINT8 ubOwner, BOOLEAN fSubsequent, INT8 bLevel, INT32 iSmokeEffectID , BOOL fFromRemoteClient , BOOL fNewSmokeEffect  )
 {
+	tacnn::OnWorldChanged(); // ja2mod 2026-09-16: smoke, gas, fire or light is about to spread
 	if (is_networked && is_client)
 	{
 		SOLDIERTYPE* pAttacker = MercPtrs[ubOwner];

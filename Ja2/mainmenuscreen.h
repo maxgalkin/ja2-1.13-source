@@ -34,6 +34,8 @@ extern UINT32		MAINMENU_Y_SPACE;
 
 BOOLEAN InitMainMenu( );
 void ClearMainMenu( );
+// ja2mod 2026-09-15: battle harness; loads a slot from the main menu without input
+BOOLEAN MainMenuAutoLoad( INT32 iSlot );
 
 void InitDependingGameStyleOptions();
 

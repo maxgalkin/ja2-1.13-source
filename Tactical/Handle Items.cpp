@@ -84,6 +84,8 @@
 #include "Ja25 Strategic Ai.h"
 #endif
 
+#include "../ModularizedTacticalAI/include/Harness.h" // ja2mod 2026-09-16: battle harness drives the player team
+
 #define					NUM_ITEMS_LISTED			8
 #define					NUM_ITEM_FLASH_SLOTS	50
 #define					MIN_LOB_RANGE					6
@@ -2748,7 +2750,10 @@ void HandleSoldierPickupItem( SOLDIERTYPE *pSoldier, INT32 iItemIndex, INT32 sGr
 	if ( GetItemPool( sGridNo, &pItemPool, pSoldier->pathing.bLevel ) )
 	{
 		// OK, if an enemy, go directly ( skip menu )
-		if ( pSoldier->bTeam != gbPlayerNum )
+		// ja2mod 2026-09-16: so does a merc the battle harness drives. The pickup menu waits for a mouse that
+		// never comes, and a second InitializeItemPickupMenu over a menu still up re-links its regions into
+		// MSYS_RegList as a cycle, which hangs the next MSYS_RemoveRegion for good.
+		if ( pSoldier->bTeam != gbPlayerNum || tacnn::HarnessDrivesPlayerTeam() )
 		{
 			// HEADROCK HAM 3.5: On-screen message when militia pick up items.
 			if ( pSoldier->bTeam == MILITIA_TEAM )

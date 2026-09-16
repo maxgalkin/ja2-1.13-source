@@ -73,6 +73,7 @@ class OBJECTTYPE;
 class SOLDIERTYPE;
 #include "connect.h"
 #include "fresh_header.h"
+#include "../ModularizedTacticalAI/include/Harness.h" // ja2mod 2026-09-15: battle harness drives the player team
 #define		NO_JUMP											0
 #define		MAX_ANIFRAMES_PER_FLASH			3
 //#define		TIME_FOR_RANDOM_ANIM_CHECK	10
@@ -2386,7 +2387,8 @@ BOOLEAN AdjustToNextAnimationFrame( SOLDIERTYPE *pSoldier )
 				// JUMP TO NEXT STATIONARY ANIMATION ACCORDING TO HEIGHT
 			case 499:
 
-				if (!(pSoldier->flags.uiStatusFlags & SOLDIER_PC))
+				// ja2mod 2026-09-15: also for the player's mercs while the battle harness drives them through the AI
+				if (!(pSoldier->flags.uiStatusFlags & SOLDIER_PC) || tacnn::HarnessDrivesPlayerTeam())
 				{
 					if ( pSoldier->aiData.bAction == AI_ACTION_PULL_TRIGGER )
 					{

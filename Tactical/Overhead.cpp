@@ -136,6 +136,8 @@
 
 #include "XML.h"
 #include "GameInitOptionsScreen.h"
+#include "../ModularizedTacticalAI/include/NeuralHooks.h" // ja2mod 2026-09-15: battle lifecycle hooks
+#include "../ModularizedTacticalAI/include/Harness.h" // ja2mod 2026-09-15: battle harness drives the player team
 
 // OJW - 20090419
 UINT8   giMAXIMUM_NUMBER_OF_PLAYER_MERCS = CODE_MAXIMUM_NUMBER_OF_PLAYER_MERCS;
@@ -1865,7 +1867,10 @@ BOOLEAN ExecuteOverhead( )
                     ( ((gTacticalStatus.uiFlags & TURNBASED) && (gTacticalStatus.uiFlags & INCOMBAT)) ||
                        (fHandleAI && guiAISlotToHandle == cnt) || (pSoldier->aiData.fAIFlags & AI_HANDLE_EVERY_FRAME) || gTacticalStatus.fAutoBandageMode ) )
             {
-                HandleSoldierAI( pSoldier );
+                {
+                    tacnn::HarnessProfileScope aiTime( tacnn::HB_AI ); // ja2mod 2026-09-16: frame profile, no-op without the harness
+                    HandleSoldierAI( pSoldier );
+                }
                 if ( !((gTacticalStatus.uiFlags & TURNBASED) && (gTacticalStatus.uiFlags & INCOMBAT)) )
                 {
                     if (GetJA2Clock() - iTimerVal > RT_AI_TIMESLICE)
@@ -6547,6 +6552,9 @@ void EnterCombatMode( UINT8 ubStartingTeam )
 
     CommonEnterCombatModeCode( );
 
+    // ja2mod 2026-09-15: a battle begins for the decision log
+    tacnn::OnEnterCombatMode();
+
     DebugMsg (TOPIC_JA2,DBG_LEVEL_3,"EnterCombatMode continuing...");
 
     if (ubStartingTeam == gbPlayerNum)
@@ -6599,6 +6607,9 @@ void ExitCombatMode( )
     SOLDIERTYPE          *pSoldier;
 
     DebugMsg( TOPIC_JA2, DBG_LEVEL_3, "Exiting combat mode" );
+
+    // ja2mod 2026-09-15: the episode ends for the decision log, while the tallies of the battle still stand
+    tacnn::OnExitCombatMode();
 
     // Leave combat mode
     gTacticalStatus.uiFlags &= (~INCOMBAT);
@@ -9618,7 +9629,9 @@ SOLDIERTYPE *InternalReduceAttackBusyCount( )
 
     pSoldier = NULL;
 
-    if (gTacticalStatus.ubCurrentTeam == gbPlayerNum && gusSelectedSoldier < TOTAL_SOLDIERS)
+    // ja2mod 2026-09-15: under the battle harness the player's mercs attack from HandleSoldierAI, so the merc under AI control
+    // is the attacker, not the selected one; picking the selected merc left the real shooter waiting for an attack that never ended
+    if (gTacticalStatus.ubCurrentTeam == gbPlayerNum && gusSelectedSoldier < TOTAL_SOLDIERS && !tacnn::HarnessDrivesPlayerTeam())
     {
         pSoldier = MercPtrs[ gusSelectedSoldier ];
     }
@@ -9811,6 +9824,11 @@ SOLDIERTYPE *InternalReduceAttackBusyCount( )
         if (pSoldier->flags.uiStatusFlags & SOLDIER_PC)
         {
             UnSetUIBusy( ubID );
+            // ja2mod 2026-09-15: the battle harness runs the player's mercs through the AI, which has to hear that the attack is over
+            if ( tacnn::HarnessDrivesPlayerTeam() )
+            {
+                FreeUpNPCFromAttacking( ubID );
+            }
         }
         else
         {

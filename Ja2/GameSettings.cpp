@@ -1801,6 +1801,28 @@ void LoadGameExternalOptions()
 	// of the legacy tree. Only useful together with an AI.ini that declares that factory.
 	gGameExternalOptions.ubNeuralEliteFraction			= iniReader.ReadInteger( "Tactical Enemy Role Settings", "NEURAL_ELITE_FRACTION", 0, 0, 100 );
 
+	// ja2mod 2026-09-15: neural AI instrumentation. Everything is off by default, so a stock
+	// Ja2_Options.INI gives stock behaviour. The folders are relative to the game folder.
+	gGameExternalOptions.fNeuralLog						= iniReader.ReadBoolean( "Tactical Enemy Role Settings", "NEURAL_LOG", FALSE );
+	iniReader.ReadString( "Tactical Enemy Role Settings", "NEURAL_LOG_DIR", "tacnn-log", gGameExternalOptions.szNeuralLogDir, sizeof( gGameExternalOptions.szNeuralLogDir ) );
+	gGameExternalOptions.uiNeuralLogCapMB				= iniReader.ReadInteger( "Tactical Enemy Role Settings", "NEURAL_LOG_CAP_MB", 2048, 16, 65536 );
+	// ja2mod 2026-09-16: the log also records the decisions the AI makes for the player's own
+	// soldiers (a merc left under AI control, or the whole squad under the battle harness), so a
+	// battle's log holds both sides for behaviour cloning. Enemy-only without it, as before.
+	gGameExternalOptions.fNeuralLogPlayer				= iniReader.ReadBoolean( "Tactical Enemy Role Settings", "NEURAL_LOG_PLAYER", FALSE );
+	gGameExternalOptions.fNeuralSidecar					= iniReader.ReadBoolean( "Tactical Enemy Role Settings", "NEURAL_SIDECAR", FALSE );
+	gGameExternalOptions.uiNeuralSidecarTimeoutMs		= iniReader.ReadInteger( "Tactical Enemy Role Settings", "NEURAL_SIDECAR_TIMEOUT_MS", 50, 1, 60000 );
+	gGameExternalOptions.uiNeuralAISeed					= iniReader.ReadInteger( "Tactical Enemy Role Settings", "NEURAL_AI_SEED", 0 );
+	gGameExternalOptions.fNeuralExportSituations		= iniReader.ReadBoolean( "Tactical Enemy Role Settings", "NEURAL_EXPORT_SITUATIONS", FALSE );
+	iniReader.ReadString( "Tactical Enemy Role Settings", "NEURAL_EXPORT_DIR", "tacnn-situations", gGameExternalOptions.szNeuralExportDir, sizeof( gGameExternalOptions.szNeuralExportDir ) );
+	gGameExternalOptions.fNeuralCheatAudit				= iniReader.ReadBoolean( "Tactical Enemy Role Settings", "NEURAL_CHEAT_AUDIT", FALSE );
+	gGameExternalOptions.fNeuralHarness					= iniReader.ReadBoolean( "Tactical Enemy Role Settings", "NEURAL_HARNESS", FALSE );
+	// ja2mod 2026-09-16: NEURAL_MODE picks who answers a tagged soldier's decision: the legacy tree
+	// (off), the policy server (sidecar) or the model file NEURAL_MODEL run inside the executable
+	// (embedded). Left empty, NEURAL_SIDECAR decides as before, so an INI from before the key is unchanged.
+	iniReader.ReadString( "Tactical Enemy Role Settings", "NEURAL_MODE", "", gGameExternalOptions.szNeuralMode, sizeof( gGameExternalOptions.szNeuralMode ) );
+	iniReader.ReadString( "Tactical Enemy Role Settings", "NEURAL_MODEL", "policy.onnx", gGameExternalOptions.szNeuralModel, sizeof( gGameExternalOptions.szNeuralModel ) );
+
 	//################# Individual Militia Settings ##################
 	// Flugente: individual militia
 	gGameExternalOptions.fIndividualMilitia								= iniReader.ReadBoolean( "Individual Militia Settings", "INDIVIDUAL_MILITIA", FALSE );

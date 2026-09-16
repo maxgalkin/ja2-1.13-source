@@ -81,6 +81,7 @@
 	#include "Animated ProgressBar.h"
 
 #include "connect.h"
+#include "Harness.h"	// ja2mod 2026-09-15: battle harness
 
 #ifdef JA2UB
 #include "Ja25_Tactical.h"
@@ -571,6 +572,9 @@ UINT32	MainGameScreenHandle(void)
 		}
 	}
 
+	// ja2mod 2026-09-16: the battle harness times the sections of this frame for its heartbeat (no-ops otherwise)
+	tacnn::HarnessLapBegin();
+
 	// OK, this is the pause system for when we see a guy...
 	if ( !ARE_IN_FADE_IN( ) )
 	{
@@ -762,6 +766,7 @@ UINT32	MainGameScreenHandle(void)
 			// Execute Tactical Overhead
 			ExecuteOverhead( );
 		}
+		tacnn::HarnessLap( tacnn::HB_OVERHEAD );
 
 		// Handle animated cursors
 		if( gfWorldLoaded )
@@ -801,6 +806,7 @@ UINT32	MainGameScreenHandle(void)
 		{
 			DequeAllGameEvents( TRUE );
 		}
+		tacnn::HarnessLap( tacnn::HB_UI );
 	}
 
 
@@ -822,15 +828,19 @@ UINT32	MainGameScreenHandle(void)
 
 	// Handle Scroll Of World
 	ScrollWorld( );
+	tacnn::HarnessLap( tacnn::HB_MESSAGES );
 
 	//SetRenderFlags( RENDER_FLAG_FULL );
 
-	RenderWorld( );
+	// ja2mod 2026-09-15: the battle harness leaves the world unrendered; the frame is not shown anyway
+	if ( !tacnn::HarnessSkipsRender() )
+		RenderWorld( );
 
 	if ( gRenderOverride != NULL )
 	{
 		gRenderOverride( );
 	}
+	tacnn::HarnessLap( tacnn::HB_WORLD );
 
 	if ( gfScrollPending || gfScrollInertia )
 	{
@@ -849,6 +859,7 @@ UINT32	MainGameScreenHandle(void)
 
 	// Render Interface
 	RenderTopmostTacticalInterface( );
+	tacnn::HarnessLap( tacnn::HB_INTERFACE );
 
 #ifdef JA2TESTVERSION
 	if ( gTacticalStatus.uiFlags & ENGAGED_IN_CONV )
@@ -907,6 +918,7 @@ UINT32	MainGameScreenHandle(void)
 	RenderRadarScreen( );
 
 	ResetInterface( );
+	tacnn::HarnessLap( tacnn::HB_RADAR );
 
 	if ( gfScrollPending	)
 	{
@@ -919,6 +931,7 @@ UINT32	MainGameScreenHandle(void)
 	{
 		ExecuteVideoOverlays( );
 	}
+	tacnn::HarnessLap( tacnn::HB_OVERLAYS );
 
 	// Adding/deleting of video overlays needs to be done below
 	// ExecuteVideoOverlays( )....
@@ -1000,6 +1013,7 @@ UINT32	MainGameScreenHandle(void)
 		gfEnteringMapScreen++;
 	}
 
+	tacnn::HarnessLap( tacnn::HB_REST );
  return( GAME_SCREEN );
 
 }

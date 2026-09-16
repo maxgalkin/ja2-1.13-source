@@ -2730,15 +2730,21 @@ BOOLEAN DoQuickSave()
 
 BOOLEAN DoQuickLoad()
 {
+	return( DoQuickLoadSlot( 0 ) );
+}
+
+// ja2mod 2026-09-15: the quick load with the slot as a parameter, for the battle harness
+BOOLEAN DoQuickLoadSlot( INT32 iSlot )
+{
 	//Build the save game array
 	InitSaveGameArray();
 
-	//if there is no save in the quick save slot
-	if( !gbSaveGameArray[ 0 ] )
+	//if there is no save in the slot
+	if( iSlot < 0 || iSlot >= NUM_SAVE_GAMES || !gbSaveGameArray[ iSlot ] )
 		return( FALSE );
 
-	//Set the selection to be the quick save slot
-	gbSelectedSaveLocation = 0;
+	//Set the selection to be the slot
+	gbSelectedSaveLocation = iSlot;
 
 	//if the game is paused, and we are in tactical, unpause
 	if( guiCurrentScreen == GAME_SCREEN )
@@ -2758,6 +2764,29 @@ BOOLEAN DoQuickLoad()
 	FadeOutNextFrame( );
 	gfStartedFadingOut = TRUE;
 	gfDoingQuickLoad = TRUE;
+
+	return( TRUE );
+}
+
+// ja2mod 2026-09-15: the battle harness presses Load on an idle save/load screen. Same effect as
+// selecting the slot on the current page and confirming; FALSE while the screen is still entering,
+// already fading, or the slot is empty.
+BOOLEAN SaveLoadScreenAutoLoad( INT32 iSlot )
+{
+	if( guiCurrentScreen != SAVE_LOAD_SCREEN || gfSaveLoadScreenEntry || gfSaveLoadScreenExit || gfStartedFadingOut || !gfSaveLoadScreenButtonsCreated )
+		return( FALSE );
+
+	if( iSlot < VAL_SLOT_START || iSlot >= VAL_SLOT_START + NUM_SLOT || iSlot >= NUM_SAVE_GAMES )
+		return( FALSE );
+
+	InitSaveGameArray();
+	if( !gbSaveGameArray[ iSlot ] )
+		return( FALSE );
+
+	// DoneFadeOutForSaveLoadScreen loads VAL_SLOT_START + gbSelectedSaveLocation
+	gbSelectedSaveLocation = iSlot - VAL_SLOT_START;
+	gfSaveGame = FALSE;
+	ConfirmLoadSavedGameMessageBoxCallBack( MSG_BOX_RETURN_YES );
 
 	return( TRUE );
 }

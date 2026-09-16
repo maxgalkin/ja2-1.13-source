@@ -1563,6 +1563,23 @@ typedef struct
 	// Zero, the default, leaves every soldier on the legacy AI.
 	UINT8	ubNeuralEliteFraction;
 
+	// ja2mod 2026-09-15: neural AI instrumentation, read by ModularizedTacticalAI/NeuralHooks.cpp.
+	// All default to off; see CHANGES-ja2mod.md and the ja2mod feature note.
+	BOOLEAN	fNeuralLog;						// NEURAL_LOG: write the binary per-decision log
+	CHAR8	szNeuralLogDir[256];			// NEURAL_LOG_DIR: folder for it, relative to the game folder
+	UINT32	uiNeuralLogCapMB;				// NEURAL_LOG_CAP_MB: total size kept before the oldest file goes
+	BOOLEAN	fNeuralLogPlayer;				// NEURAL_LOG_PLAYER: also record the AI's decisions for the player's soldiers
+	BOOLEAN	fNeuralSidecar;					// NEURAL_SIDECAR: ask the policy server over the named pipe
+	UINT32	uiNeuralSidecarTimeoutMs;		// NEURAL_SIDECAR_TIMEOUT_MS: deadline per request
+	UINT32	uiNeuralAISeed;					// NEURAL_AI_SEED: separate AI dice stream when non-zero
+	BOOLEAN	fNeuralExportSituations;		// NEURAL_EXPORT_SITUATIONS: JSON lines before every legacy decision
+	CHAR8	szNeuralExportDir[256];			// NEURAL_EXPORT_DIR: folder for them
+	BOOLEAN	fNeuralCheatAudit;				// NEURAL_CHEAT_AUDIT: rebuild every observation with unseen enemies' life poisoned and log whether it changed
+	BOOLEAN	fNeuralHarness;					// NEURAL_HARNESS: the fast-forward battle harness (ModularizedTacticalAI/Harness.cpp); its HARNESS_* keys live in [Ja2 Settings]
+	// ja2mod 2026-09-16: the in-process policy (ModularizedTacticalAI/TacnnInfer.cpp).
+	CHAR8	szNeuralMode[16];				// NEURAL_MODE: off | sidecar | embedded; empty falls back to NEURAL_SIDECAR
+	CHAR8	szNeuralModel[256];				// NEURAL_MODEL: the .onnx under AI\ in the data folders (VFS path)
+
 	// Flugente: individual militia
 	BOOLEAN fIndividualMilitia;
 	UINT16 usIndividualMilitia_PromotionPoints_To_Regular;

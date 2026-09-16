@@ -92,6 +92,15 @@ void InitializeRandom(void)
 	guiPreRandomIndex = 0;
 }
 
+// ja2mod 2026-09-15: the battle harness restarts the game dice from a known seed before each battle.
+// GetRndNum still mixes the cursor position and the tick count into its periodic reseed, so only
+// the NEW_RANDOM generator becomes reproducible; the AI's own dice are seeded separately (NEURAL_AI_SEED).
+void SeedGameRandom(UINT32 uiSeed)
+{
+	gRandomNumberGenerator.seed(uiSeed);
+	srand(uiSeed);
+}
+
 #else
 
 UINT32 guiPreRandomIndex = 0;

@@ -89,6 +89,8 @@ void SetFastForwardKey(INT32 key);
 BOOLEAN IsFastForwardKeyPressed();
 void SetFastForwardMode(BOOLEAN enable);
 BOOLEAN IsFastForwardMode();
+// ja2mod 2026-09-15: set by the battle harness; IsFastForwardMode() is true while it is
+extern BOOLEAN gfHarnessFastForward;
 INT32 GetFastForwardLoopCount();
 void SetFastForwardLoopCount(INT32 value);
 

@@ -9,6 +9,7 @@
 
 #include "../../Tactical/Soldier Control.h"      // SOLDIERTYPE
 #include "sgp_logger.h"                          // SGP_INFO writes to game_log.log
+#include "../include/NeuralHooks.h"              // ja2mod 2026-09-15: sidecar policy, decision log
 
 namespace AI
 {
@@ -58,6 +59,7 @@ namespace AI
             bool decided = policy->decide(npc, environment);
             if(!decided)
                 LegacyAIPlan::execute(environment);
+            tacnn::OnNeuralDecisionEnd(npc, decided);
 
             // One line per decision of a soldier routed to this factory. Soldiers that are
             // not routed here never reach this code, so the log of a game without any of

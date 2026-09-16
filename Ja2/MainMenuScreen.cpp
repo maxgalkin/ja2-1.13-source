@@ -564,6 +564,26 @@ void HandleMainMenuInput()
 }
 
 
+// ja2mod 2026-09-15: the battle harness presses Load for the player. Same path as ALT+Load
+// (load the last saved slot without the save/load screen), with the slot chosen here.
+BOOLEAN MainMenuAutoLoad( INT32 iSlot )
+{
+	// InitMainMenu clears gbHandledMainMenu, so wait until the menu is up
+	if ( gfMainMenuScreenEntry || guiSplashFrameFade || gbHandledMainMenu != 0 || iSlot < 0 || iSlot >= NUM_SAVE_GAMES )
+		return( FALSE );
+
+	InitSaveGameArray();
+	if ( !gbSaveGameArray[ iSlot ] )
+		return( FALSE );
+
+	gGameSettings.bLastSavedGameSlot = iSlot;
+	gfLoadGameUponEntry = TRUE;
+	gbHandledMainMenu = LOAD_GAME;
+	HandleMainMenuInput();
+	return( TRUE );
+}
+
+
 void ClearMainMenu()
 {
 	UINT32										uiDestPitchBYTES;

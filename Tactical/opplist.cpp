@@ -59,6 +59,7 @@
 #include "../ModularizedTacticalAI/include/Plan.h"
 #include "../ModularizedTacticalAI/include/PlanFactoryLibrary.h"
 #include "../ModularizedTacticalAI/include/AbstractPlanFactory.h"
+#include "../ModularizedTacticalAI/include/NeuralHooks.h" // ja2mod 2026-09-15: belief store hooks
 
 //rain
 //#define VIS_DIST_DECREASE_PER_RAIN_INTENSITY 20
@@ -2656,6 +2657,9 @@ void ManSeesMan(SOLDIERTYPE *pSoldier, SOLDIERTYPE *pOpponent, INT32 sOppGridNo,
 	// remember that the soldier is currently seen and his new location
  UpdatePersonal(pSoldier,pOpponent->ubID,SEEN_CURRENTLY,sOppGridNo,bOppLevel);
 
+	// ja2mod 2026-09-15: the neural AI's belief store learns what the observer can legitimately see
+	tacnn::OnManSeesMan( pSoldier, pOpponent, sOppGridNo, bOppLevel );
+
 	if ( ubCaller2 == MANLOOKSFOROTHERTEAMS || ubCaller2 == OTHERTEAMSLOOKFORMAN || ubCaller2 == CALLER_UNKNOWN ) // unknown->hearing
 	{
 
@@ -3343,6 +3347,9 @@ HandleSight(pSoldier,SIGHT_LOOK);
 void InitOpponentKnowledgeSystem(void)
 {
 	INT32	iTeam, cnt, cnt2;
+
+	// ja2mod 2026-09-15: a new sector forgets the neural AI's beliefs along with the opplists
+	tacnn::OnInitOpponentKnowledge();
 
 	memset(gbSeenOpponents,0,sizeof(gbSeenOpponents));
 	memset(gbPublicOpplist,NOT_HEARD_OR_SEEN,sizeof(gbPublicOpplist));
@@ -6570,6 +6577,9 @@ void HearNoise(SOLDIERTYPE *pSoldier, UINT8 ubNoiseMaker, INT32 sGridNo, INT8 bL
 			// remember that the soldier has been heard and his new location
 			UpdatePersonal(pSoldier,ubNoiseMaker,HEARD_THIS_TURN,sGridNo, bLevel);
 
+			// ja2mod 2026-09-15: belief store, hearing branch
+			tacnn::OnHearNoise( pSoldier, ubNoiseMaker, sGridNo, bLevel, ubVolume, ubNoiseType );
+
 			// sevenfm: increment watched location when soldier hears enemy
 			if ((ubNoiseType == NOISE_GUNFIRE || ubNoiseType == NOISE_MOVEMENT || ubNoiseType == NOISE_SCREAM || ubNoiseType == NOISE_VOICE) &&
 				!TileIsOutOfBounds(sGridNo) &&
@@ -7432,6 +7442,9 @@ void NoticeUnseenAttacker( SOLDIERTYPE * pAttacker, SOLDIERTYPE * pDefender, INT
 		}
 
 		UpdatePersonal( pDefender, pAttacker->ubID, HEARD_THIS_TURN, pAttacker->sGridNo, pAttacker->pathing.bLevel );
+
+		// ja2mod 2026-09-15: belief store, unseen attacker branch
+		tacnn::OnNoticeUnseenAttacker( pDefender, pAttacker );
 
 		// if the victim is a human-controlled soldier, instantly report publicly
 		if (pDefender->flags.uiStatusFlags & SOLDIER_PC)
