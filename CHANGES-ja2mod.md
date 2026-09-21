@@ -93,3 +93,25 @@ uncovers the attacker at once. Nothing in the savegame format changes.
 | --- | --- | --- |
 | 2026-09-15 | `Tactical/Weapons.cpp` | `MeleeTargetSeesAttacker` (from the `SOLDIER_BACK_ATTACK`/`SOLDIER_SNEAK_ATTACK` flags, collapse and blindness) replaces the "can the target see us" line-of-sight test of the garotte code in `CalcChanceHTH` and `HTHImpact`, which was taken from the attacker's side and therefore always true for an adjacent target. `CalcChanceHTH`: a Covert-flagged blade adds `COVERT_MELEE_CTH_BONUS` per Covert Ops level in the stab branch. `HTHImpact`: a Covert-flagged blade rolls the garotte instakill when the target does not see the attacker; the weapon-status scaling of the roll no longer collapses to zero for any status below 100 (integer division). |
 | 2026-09-15 | `Tactical/Soldier Control.cpp` | Helpers `IsDisguised`, `IsCovertMeleeWeapon`, `IsDisguisedBackAttack`, `VictimUncoversDisguisedAttacker`. `EVENT_SoldierBeginBladeAttack` no longer turns the victim to face a disguised attacker who strikes from behind. `RecognizeAsCombatant` extends the punch-attack exemption to the four blade animations. `EVENT_SoldierGotHit`: no scream when a disguised attacker kills from behind with a covert melee weapon; a victim who stays on his feet after a melee hit from a disguised attacker uncovers him. |
+
+### In-battle counter hygiene (stock bug fix)
+
+A sector's and a mobile enemy group's `ub*InBattle` counters record how many of its soldiers
+stand on the loaded tactical map. Stock 1.13 raises them when a map is entered and clears them
+when it is left, but only for the groups still positioned in the battle sector. A group that
+was counted into the battle while already walking out of the sector kept moving on the
+strategic layer, arrived next door in the middle of the fight, was reassigned there, and so
+missed the clean-up: it carried "13 troops in battle" for the rest of the campaign. The next
+time it met the player it either fielded no soldiers or, once the strategic AI had re-split its
+13 soldiers into fewer troops plus some elites, crashed the game on
+`AssertGE( ubNumTroops, ubTroopsInBattle )` in `PrepareEnemyForSectorBattle()`. Stock only
+notices this in `JA2BETAVERSION` builds (`ValidateAndCorrectInBattleCounters()`), which the
+shipped executable is not. Nothing in the savegame format changes; a save that already carries
+stale counters is repaired the next time a map is entered or left, with a line in `game_log.log`.
+
+| Date | File | Change |
+| --- | --- | --- |
+| 2026-09-21 | `Strategic/Queen Command.h` | Declares `EnemyGroupHasSoldiersInBattle`, `ClearEnemyGroupInBattleCounters`, `ClearStaleInBattleCounters`. |
+| 2026-09-21 | `Strategic/Queen Command.cpp` | The three helpers plus their sector-side counterparts. `ClearStaleInBattleCounters` clears every set enemy in-battle counter of any group, surface sector or underground sector (creature counters are left to the creature code, which sets them before this runs) and logs each one to `game_log.log`. `EndTacticalBattleForEnemy` uses the helpers (which now also clear the fork's `ubNeuralInBattle`) and then sweeps every group, not only those in the battle sector. `PrepareEnemyForSectorBattle` sweeps first thing: it only ever runs for a map with no enemy soldier on it, so anything still set is stale, and repairing it there is what turns the release-build assertion into a log line. `AddPossiblePendingEnemiesToBattle`: the fallback branch that books an unaccounted soldier as a troop now raises `ubNumTroops` along with `ubTroopsInBattle`. |
+| 2026-09-21 | `Strategic/Strategic Movement.cpp` | `GroupArrivedAtSector` holds the arrival of an enemy group that is leaving the loaded battle sector while it has soldiers in that battle, re-posting the event 3-5 minutes later exactly like the existing hold for an arrival into a contested sector. |
+| 2026-09-21 | `Strategic/Strategic AI.cpp` | `ConvertGroupTroopsToComposition` keeps the roster of a group whose soldiers are fighting on the loaded map (their classes are already fixed) and clears the in-battle counters of a group that carries stale ones before re-splitting it. |

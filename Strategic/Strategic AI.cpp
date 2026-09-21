@@ -6812,6 +6812,24 @@ void ConvertGroupTroopsToComposition( GROUP *pGroup, INT32 iCompositionID )
 {
 	Assert( pGroup );
 	Assert( pGroup->usGroupTeam == ENEMY_TEAM );
+
+	// ja2mod: a group that counts soldiers in battle is either fighting on the loaded map right now
+	// or carries stale counters. In the first case its class counts describe soldiers that already
+	// exist with their classes fixed, so re-splitting them into a different troop/elite mix would
+	// only make the counts lie; keep the roster. In the second case (a group that walked out of a
+	// battle sector before this fork held it back, see GroupArrivedAtSector()) the shares mean
+	// nothing and have to go, otherwise ubTroopsInBattle exceeds the new, smaller ubNumTroops and
+	// the next PrepareEnemyForSectorBattle() asserts, which is how this was found.
+	if ( EnemyGroupHasSoldiersInBattle( pGroup ) )
+	{
+		if ( gfWorldLoaded && gTacticalStatus.fEnemyInSector && !gbWorldSectorZ
+			&& pGroup->ubSectorX == gWorldSectorX && pGroup->ubSectorY == gWorldSectorY )
+		{
+			return;
+		}
+		ClearEnemyGroupInBattleCounters( pGroup );
+	}
+
 	CalcNumTroopsBasedOnComposition( &pGroup->pEnemyGroup->ubNumTroops, &pGroup->pEnemyGroup->ubNumElites, pGroup->ubGroupSize, iCompositionID );
 	pGroup->pEnemyGroup->ubNumAdmins = 0;
 	pGroup->ubGroupSize = pGroup->pEnemyGroup->ubNumTroops + pGroup->pEnemyGroup->ubNumElites;

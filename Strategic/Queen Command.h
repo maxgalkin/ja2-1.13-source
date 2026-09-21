@@ -44,6 +44,13 @@ void AddMilitiaToBattle( GROUP *pGroup, UINT8 ubStrategicInsertionCode, UINT8 ub
 void AddPossiblePendingEnemiesToBattle();
 void EndTacticalBattleForEnemy();
 
+// ja2mod: in-battle counter hygiene (2026-09-21). The ub*InBattle counters of a sector or an
+// enemy group may only be set while a tactical battle is loaded and the counted soldiers stand
+// on that map. See the definitions for how the counters used to leak.
+BOOLEAN EnemyGroupHasSoldiersInBattle( const GROUP *pGroup );
+void ClearEnemyGroupInBattleCounters( GROUP *pGroup );
+UINT8 ClearStaleInBattleCounters( const char *pcReason );
+
 void ProcessQueenCmdImplicationsOfDeath( SOLDIERTYPE *pSoldier );
 
 void HandleEnemyStatusInCurrentMapBeforeLoadingNewMap();

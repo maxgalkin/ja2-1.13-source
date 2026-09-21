@@ -38,6 +38,7 @@
 	#include "Campaign Init.h"
 	#include "Meanwhile.h"
 	#include "Soldier macros.h"
+	#include "sgp_logger.h"	// ja2mod: SGP_INFO writes to game_log.log
 	#include "Morale.h"
 	#include "CampaignStats.h"		// added by Flugente
 	#include "ASD.h"				// added by Flugente
@@ -502,6 +503,155 @@ void GetNumberOfEnemiesInSector( INT16 sSectorX, INT16 sSectorY, UINT8 *pubNumAd
 	*pubNumJeeps += ubNumJeeps;
 }
 
+// ja2mod: in-battle counter hygiene.
+//
+// A sector's and a mobile group's ub*InBattle counters say how many of its soldiers stand on the
+// loaded tactical map. PrepareEnemyForSectorBattle() raises them when the map is entered and
+// EndTacticalBattleForEnemy() clears them when it is left, but only for the groups that are still
+// positioned in the battle sector. A group counted into the battle while it was already walking
+// out of the sector kept moving on the strategic layer: its arrival event fired mid-battle,
+// GroupArrivedAtSector() moved it to the neighbouring sector (an arrival is only held back when
+// the destination has players or militia), and from there the strategic AI reassigned it. The
+// battle then ended without it, so it kept "13 troops in battle" for the rest of the campaign.
+// The next time it met the player it either fielded no soldiers (13 - 13 = 0 to place) or, after
+// ConvertGroupTroopsToComposition() had re-split its 13 soldiers into fewer troops and some
+// elites, tripped the AssertGE( ubNumTroops, ubTroopsInBattle ) in PrepareEnemyForSectorBattle().
+//
+// The rule is now enforced from three sides: GroupArrivedAtSector() holds a group whose soldiers
+// are in the loaded battle, EndTacticalBattleForEnemy() clears every group anywhere, and
+// PrepareEnemyForSectorBattle() clears whatever is still set when a map is entered, because at
+// that moment no enemy soldier is on any map.
+
+BOOLEAN EnemyGroupHasSoldiersInBattle( const GROUP *pGroup )
+{
+	if ( !pGroup || pGroup->usGroupTeam != ENEMY_TEAM || !pGroup->pEnemyGroup )
+		return FALSE;
+
+	const ENEMYGROUP *pEnemy = pGroup->pEnemyGroup;
+	return ( pEnemy->ubAdminsInBattle || pEnemy->ubTroopsInBattle || pEnemy->ubElitesInBattle ||
+			 pEnemy->ubRobotsInBattle || pEnemy->ubTanksInBattle || pEnemy->ubJeepsInBattle ||
+			 pEnemy->ubNeuralInBattle );
+}
+
+void ClearEnemyGroupInBattleCounters( GROUP *pGroup )
+{
+	if ( !pGroup || pGroup->usGroupTeam != ENEMY_TEAM || !pGroup->pEnemyGroup )
+		return;
+
+	pGroup->pEnemyGroup->ubAdminsInBattle = 0;
+	pGroup->pEnemyGroup->ubTroopsInBattle = 0;
+	pGroup->pEnemyGroup->ubElitesInBattle = 0;
+	pGroup->pEnemyGroup->ubRobotsInBattle = 0;
+	pGroup->pEnemyGroup->ubTanksInBattle = 0;
+	pGroup->pEnemyGroup->ubJeepsInBattle = 0;
+	pGroup->pEnemyGroup->ubNeuralInBattle = 0;
+}
+
+static BOOLEAN SectorHasSoldiersInBattle( const SECTORINFO *pSector )
+{
+	return ( pSector->ubAdminsInBattle || pSector->ubTroopsInBattle || pSector->ubElitesInBattle ||
+			 pSector->ubRobotsInBattle || pSector->ubTanksInBattle ||
+			 pSector->ubJeepsInBattle || pSector->ubNeuralInBattle );
+}
+
+static void ClearSectorInBattleCounters( SECTORINFO *pSector )
+{
+	pSector->ubAdminsInBattle = 0;
+	pSector->ubTroopsInBattle = 0;
+	pSector->ubElitesInBattle = 0;
+	pSector->ubRobotsInBattle = 0;
+	pSector->ubTanksInBattle = 0;
+	pSector->ubJeepsInBattle = 0;
+	pSector->ubNeuralInBattle = 0;
+}
+
+static BOOLEAN UndergroundSectorHasSoldiersInBattle( const UNDERGROUND_SECTORINFO *pSector )
+{
+	return ( pSector->ubAdminsInBattle || pSector->ubTroopsInBattle || pSector->ubElitesInBattle ||
+			 pSector->ubRobotsInBattle || pSector->ubTanksInBattle ||
+			 pSector->ubJeepsInBattle || pSector->ubNeuralInBattle );
+}
+
+static void ClearUndergroundSectorInBattleCounters( UNDERGROUND_SECTORINFO *pSector )
+{
+	pSector->ubAdminsInBattle = 0;
+	pSector->ubTroopsInBattle = 0;
+	pSector->ubElitesInBattle = 0;
+	pSector->ubRobotsInBattle = 0;
+	pSector->ubTanksInBattle = 0;
+	pSector->ubJeepsInBattle = 0;
+	pSector->ubNeuralInBattle = 0;
+}
+
+// Outside a tactical battle no in-battle counter may be set anywhere: there is only ever one
+// battle, and it is the loaded map. Clears every counter that is set nevertheless, writes one
+// line per repaired group or sector to game_log.log, and returns how many there were.
+UINT8 ClearStaleInBattleCounters( const char *pcReason )
+{
+	UINT8 ubStale = 0;
+
+	for ( GROUP *pGroup = gpGroupList; pGroup; pGroup = pGroup->next )
+	{
+		if ( EnemyGroupHasSoldiersInBattle( pGroup ) )
+		{
+			const ENEMYGROUP *pEnemy = pGroup->pEnemyGroup;
+			SGP_INFO() << "InBattle: group " << (int)pGroup->ubGroupID << " at " << (char)( 'A' + pGroup->ubSectorY - 1 ) << (int)pGroup->ubSectorX
+				<< " had stale in-battle counters (" << pcReason << "):"
+				<< " A " << (int)pEnemy->ubNumAdmins << "/" << (int)pEnemy->ubAdminsInBattle
+				<< " T " << (int)pEnemy->ubNumTroops << "/" << (int)pEnemy->ubTroopsInBattle
+				<< " E " << (int)pEnemy->ubNumElites << "/" << (int)pEnemy->ubElitesInBattle
+				<< " R " << (int)pEnemy->ubNumRobots << "/" << (int)pEnemy->ubRobotsInBattle
+				<< " Tk " << (int)pEnemy->ubNumTanks << "/" << (int)pEnemy->ubTanksInBattle
+				<< " J " << (int)pEnemy->ubNumJeeps << "/" << (int)pEnemy->ubJeepsInBattle
+				<< " N " << (int)pEnemy->ubNumElites_Neural << "/" << (int)pEnemy->ubNeuralInBattle
+				<< ", cleared" << sgp::endl;
+			ClearEnemyGroupInBattleCounters( pGroup );
+			++ubStale;
+		}
+	}
+
+	for ( INT32 iSector = 0; iSector < 256; ++iSector )
+	{
+		SECTORINFO *pSector = &SectorInfo[ iSector ];
+		if ( SectorHasSoldiersInBattle( pSector ) )
+		{
+			SGP_INFO() << "InBattle: sector " << (char)( 'A' + SECTORY( iSector ) - 1 ) << (int)SECTORX( iSector )
+				<< " had stale in-battle counters (" << pcReason << "):"
+				<< " A " << (int)pSector->ubNumAdmins << "/" << (int)pSector->ubAdminsInBattle
+				<< " T " << (int)pSector->ubNumTroops << "/" << (int)pSector->ubTroopsInBattle
+				<< " E " << (int)pSector->ubNumElites << "/" << (int)pSector->ubElitesInBattle
+				<< " R " << (int)pSector->ubNumRobots << "/" << (int)pSector->ubRobotsInBattle
+				<< " Tk " << (int)pSector->ubNumTanks << "/" << (int)pSector->ubTanksInBattle
+				<< " J " << (int)pSector->ubNumJeeps << "/" << (int)pSector->ubJeepsInBattle
+				<< " N " << (int)pSector->ubNumElites_Neural << "/" << (int)pSector->ubNeuralInBattle
+				<< ", cleared" << sgp::endl;
+			ClearSectorInBattleCounters( pSector );
+			++ubStale;
+		}
+	}
+
+	for ( UNDERGROUND_SECTORINFO *pSector = gpUndergroundSectorInfoHead; pSector; pSector = pSector->next )
+	{
+		if ( UndergroundSectorHasSoldiersInBattle( pSector ) )
+		{
+			SGP_INFO() << "InBattle: underground sector " << (char)( 'A' + pSector->ubSectorY - 1 ) << (int)pSector->ubSectorX << "/" << (int)pSector->ubSectorZ
+				<< " had stale in-battle counters (" << pcReason << "):"
+				<< " A " << (int)pSector->ubNumAdmins << "/" << (int)pSector->ubAdminsInBattle
+				<< " T " << (int)pSector->ubNumTroops << "/" << (int)pSector->ubTroopsInBattle
+				<< " E " << (int)pSector->ubNumElites << "/" << (int)pSector->ubElitesInBattle
+				<< " R " << (int)pSector->ubNumRobots << "/" << (int)pSector->ubRobotsInBattle
+				<< " Tk " << (int)pSector->ubNumTanks << "/" << (int)pSector->ubTanksInBattle
+				<< " J " << (int)pSector->ubNumJeeps << "/" << (int)pSector->ubJeepsInBattle
+				<< " N " << (int)pSector->ubNumElites_Neural << "/" << (int)pSector->ubNeuralInBattle
+				<< ", cleared" << sgp::endl;
+			ClearUndergroundSectorInBattleCounters( pSector );
+			++ubStale;
+		}
+	}
+
+	return ubStale;
+}
+
 void EndTacticalBattleForEnemy()
 {
 	GROUP *pGroup;
@@ -512,24 +662,16 @@ void EndTacticalBattleForEnemy()
 	{
 		UNDERGROUND_SECTORINFO *pSector;
 		pSector = FindUnderGroundSector( gWorldSectorX, gWorldSectorY, gbWorldSectorZ );
-		pSector->ubAdminsInBattle = 0;
-		pSector->ubTroopsInBattle = 0;
-		pSector->ubElitesInBattle = 0;
-		pSector->ubRobotsInBattle = 0;
-		pSector->ubTanksInBattle = 0;
-		pSector->ubJeepsInBattle = 0;
+		// ja2mod: one helper for all of the counters, which also covers the neural share.
+		ClearUndergroundSectorInBattleCounters( pSector );
 	}
 	else if( !gbWorldSectorZ )
 	{
 		SECTORINFO *pSector;
 		pSector = &SectorInfo[ SECTOR( gWorldSectorX, gWorldSectorY ) ];
 		//grab the number of each type in the stationary sector
-		pSector->ubAdminsInBattle = 0;
-		pSector->ubTroopsInBattle = 0;
-		pSector->ubElitesInBattle = 0;
-		pSector->ubRobotsInBattle = 0;
-		pSector->ubTanksInBattle = 0;
-		pSector->ubJeepsInBattle = 0;
+		// ja2mod: one helper for all of the counters, which also covers the neural share.
+		ClearSectorInBattleCounters( pSector );
 		pSector->ubNumCreatures = 0;
 		pSector->ubCreaturesInBattle = 0;
 	}
@@ -545,15 +687,16 @@ void EndTacticalBattleForEnemy()
 	{
 		if ( pGroup->usGroupTeam == ENEMY_TEAM && !pGroup->fVehicle && pGroup->ubSectorX == gWorldSectorX && pGroup->ubSectorY == gWorldSectorY )
 		{
-			pGroup->pEnemyGroup->ubTroopsInBattle = 0;
-			pGroup->pEnemyGroup->ubElitesInBattle = 0;
-			pGroup->pEnemyGroup->ubRobotsInBattle = 0;
-			pGroup->pEnemyGroup->ubAdminsInBattle = 0;
-			pGroup->pEnemyGroup->ubTanksInBattle = 0;
-			pGroup->pEnemyGroup->ubJeepsInBattle = 0;
+			ClearEnemyGroupInBattleCounters( pGroup );	// ja2mod: includes the neural share
 		}
 		pGroup = pGroup->next;
 	}
+
+	// ja2mod: the battle that just ended was the only one, so a group that still counts soldiers
+	// in battle anywhere else took part in it and then left the sector on the strategic layer
+	// (see GroupArrivedAtSector()). Clear those too, and log them: after the arrival hold-back
+	// this should not happen any more.
+	ClearStaleInBattleCounters( "sector unloaded" );
 
 
 	//Check to see if any of our mercs have abandoned the militia during a battle.  This is cause for a rather
@@ -619,6 +762,12 @@ BOOLEAN PrepareEnemyForSectorBattle()
 
 	// rftr: clear cached transport groups
 	ClearTransportGroupMap();
+
+	// ja2mod: this is only ever called for a map without enemy soldiers on it (a freshly loaded
+	// one, or the loaded one when NumEnemyInSector() is 0), so every in-battle counter anywhere
+	// is stale at this point. Repair and log instead of tripping the AssertGE()s below, which is
+	// what a savegame made before this fix would otherwise do. See EndTacticalBattleForEnemy().
+	ClearStaleInBattleCounters( "sector load" );
 
 	if( gbWorldSectorZ > 0 )
 		return PrepareEnemyForUndergroundBattle();
@@ -2171,6 +2320,11 @@ void AddPossiblePendingEnemiesToBattle()
 			// WANNE: Instead of asserting, just add a regular troop
 			//AssertMsg( 0, "AddPossiblePendingEnemiesToBattle():  Logic Error -- by Kris" );
 
+			// ja2mod: the group's class counts did not add up to ubGroupSize, so the extra soldier
+			// is booked as a troop. He has to be counted in ubNumTroops as well, otherwise the group
+			// leaves the battle with more troops in battle than it has and the next
+			// PrepareEnemyForSectorBattle() trips AssertGE( ubNumTroops, ubTroopsInBattle ).
+			pGroup->pEnemyGroup->ubNumTroops++;
 			pGroup->pEnemyGroup->ubTroopsInBattle++;
 			ubSlots--;
 			AddEnemiesToBattle( pGroup, ubInsertionCode, 0, 1, 0, 0, 0, 0, FALSE );

@@ -1935,6 +1935,26 @@ void GroupArrivedAtSector( UINT8 ubGroupID, BOOLEAN fCheckForBattle, BOOLEAN fNe
 			return;
 		}
 	}
+
+	// ja2mod: an enemy group that counts soldiers in battle has them standing on the loaded map,
+	// because PrepareEnemyForSectorBattle() takes every enemy group positioned in the sector,
+	// including one that was already on its way out. Letting such a group arrive next door in the
+	// middle of the fight moves it out from under EndTacticalBattleForEnemy(), which only clears
+	// the groups still positioned in the battle sector; the group then keeps "N troops in battle"
+	// for good and its next battle fields nobody or trips an assertion. Hold the arrival until the
+	// battle is over, the way an arrival into a contested sector is held above. Groups that only
+	// reverse within the sector (fNeverLeft) are not leaving and are not held.
+	if ( fCheckForBattle && pGroup->usGroupTeam == ENEMY_TEAM && !pGroup->fVehicle
+		&& gfWorldLoaded && gTacticalStatus.fEnemyInSector && !gbWorldSectorZ
+		&& pGroup->ubSectorX == gWorldSectorX && pGroup->ubSectorY == gWorldSectorY
+		&& ( pGroup->ubNextX != pGroup->ubSectorX || pGroup->ubNextY != pGroup->ubSectorY )
+		&& EnemyGroupHasSoldiersInBattle( pGroup ) )
+	{
+		pGroup->uiArrivalTime += Random(3) + 3;
+		if( !AddStrategicEvent( EVENT_GROUP_ARRIVAL, pGroup->uiArrivalTime, pGroup->ubGroupID ) )
+			AssertMsg( 0, "Failed to add movement event." );
+		return;
+	}
 	
 	//Update the position of the group
 	pGroup->ubPrevX = pGroup->ubSectorX;
