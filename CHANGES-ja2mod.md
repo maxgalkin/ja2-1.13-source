@@ -115,3 +115,20 @@ stale counters is repaired the next time a map is entered or left, with a line i
 | 2026-09-21 | `Strategic/Queen Command.cpp` | The three helpers plus their sector-side counterparts. `ClearStaleInBattleCounters` clears every set enemy in-battle counter of any group, surface sector or underground sector (creature counters are left to the creature code, which sets them before this runs) and logs each one to `game_log.log`. `EndTacticalBattleForEnemy` uses the helpers (which now also clear the fork's `ubNeuralInBattle`) and then sweeps every group, not only those in the battle sector. `PrepareEnemyForSectorBattle` sweeps first thing: it only ever runs for a map with no enemy soldier on it, so anything still set is stale, and repairing it there is what turns the release-build assertion into a log line. `AddPossiblePendingEnemiesToBattle`: the fallback branch that books an unaccounted soldier as a troop now raises `ubNumTroops` along with `ubTroopsInBattle`. |
 | 2026-09-21 | `Strategic/Strategic Movement.cpp` | `GroupArrivedAtSector` holds the arrival of an enemy group that is leaving the loaded battle sector while it has soldiers in that battle, re-posting the event 3-5 minutes later exactly like the existing hold for an arrival into a contested sector. |
 | 2026-09-21 | `Strategic/Strategic AI.cpp` | `ConvertGroupTroopsToComposition` keeps the roster of a group whose soldiers are fighting on the loaded map (their classes are already fixed) and clears the in-battle counters of a group that carries stale ones before re-splitting it. |
+
+### AI pause outlives a savegame load (stock bug fix)
+
+`ExecuteOverhead` runs no AI while `gfPauseAllAI` is set, and ends a temporary pause when
+`GetJA2Clock() - giPauseAllAITimer` exceeds 1.5 s. `ExitCombatMode()` arms such a pause at the
+end of every battle, after which the tactical loop that would expire it no longer runs. A
+savegame load then restores `guiBaseJA2Clock` from the file and re-bases a list of clock
+stamps (`ResetJA2ClockGlobalTimers`) that did not include the AI's. Loading a save whose clock
+was behind the current one left the pause armed with a stamp from the future: the age came out
+negative, no AI ran until the clock had caught up, and the next enemy turn stood still for as
+long as the load had rewound the clock (observed: 7 minutes), with the deadlock watchdog unable
+to help because it lives inside `HandleSoldierAI`. Nothing in the savegame format changes.
+
+| Date | File | Change |
+| --- | --- | --- |
+| 2026-09-23 | `Utils/Timer Control.cpp` | `ResetJA2ClockGlobalTimers` (called by `LoadSavedGame` right after it restores the clock) ends any AI pause with `UnPauseAI` and re-bases `giRTAILastUpdateTime`, the realtime AI cadence stamp, which had the same shape. |
+| 2026-09-23 | `Tactical/Overhead.cpp` | `ExecuteOverhead`: a pause stamp that lies ahead of the clock ends the pause instead of extending it, so the stall cannot recur through any other path that moves the clock backwards. |

@@ -970,7 +970,9 @@ BOOLEAN ExecuteOverhead( )
     HandleCreatureTenseQuote( );
     CheckHostileOrSayQuoteList();
 
-    if ( gfPauseAllAI && giPauseAllAITimer && ( iTimerVal - giPauseAllAITimer > PAUSE_ALL_AI_DELAY ) )
+    // ja2mod 2026-09-23: a stamp that lies ahead of the clock was taken before a savegame load rewound it (or before
+    // the clock's overflow reset); the pause it timed is long over. Stock kept the AI paused until the clock caught up.
+    if ( gfPauseAllAI && giPauseAllAITimer && ( iTimerVal - giPauseAllAITimer > PAUSE_ALL_AI_DELAY || iTimerVal < giPauseAllAITimer ) )
     {
         // ok, stop pausing the AI!
         gfPauseAllAI = FALSE;

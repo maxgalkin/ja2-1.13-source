@@ -133,6 +133,9 @@ extern INT32 giFlashAssignBaseTime;
 extern INT32 giFlashContractBaseTime;
 extern UINT32 guiFlashCursorBaseTime;
 extern INT32 giPotCharPathBaseTime;
+// ja2mod 2026-09-23: the tactical AI's own clock stamps (Tactical/Overhead.cpp)
+extern INT32 giRTAILastUpdateTime;
+extern void UnPauseAI( );
 
 // sevenfm: display overflow detection
 extern void MapScreenMessage(UINT16 usColor, UINT8 ubPriority, STR16 pStringA, ...);
@@ -603,6 +606,16 @@ void ResetJA2ClockGlobalTimers( void )
 	giFlashContractBaseTime = uiCurrentTime;
 	guiFlashCursorBaseTime = uiCurrentTime;
 	giPotCharPathBaseTime = uiCurrentTime;
+
+	// ja2mod 2026-09-23: the tactical AI keeps two stamps of this clock that were not re-based here. An AI pause
+	// armed before the load (ExitCombatMode() arms one at the end of every battle) survived it with a stamp from
+	// the old timeline; when the load restored an older clock, ExecuteOverhead() saw a negative age on the pause
+	// and ran no AI at all until the clock had caught up: an enemy turn frozen for as long as the load had rewound
+	// the clock, out of reach of the deadlock watchdog, which lives inside HandleSoldierAI(). Nothing about a
+	// pause belongs to the loaded state (the flag is not saved), so it ends here; the realtime AI cadence stamp
+	// has the same shape and is re-based like the others.
+	UnPauseAI( );
+	giRTAILastUpdateTime = uiCurrentTime;
 }
 
 void SetTileAnimCounter( INT32 iTime )
