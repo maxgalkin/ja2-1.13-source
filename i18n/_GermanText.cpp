@@ -9011,6 +9011,7 @@ STR16	szCovertTextStr[]=
 	L"Einem Elitesoldat schien %s verdächtig!",
 	L"Ein Offizier hat %s erkannt!",
 	L"%s kann sich jetzt nicht verkleiden - ein Feind hat %s vor kurzem gesehen.",
+	L"%s: der schallgedämpfte Schuss trifft eine lebenswichtige Stelle.",
 };
 
 STR16	szCorpseTextStr[]=

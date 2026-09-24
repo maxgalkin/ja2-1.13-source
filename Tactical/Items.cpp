@@ -12062,6 +12062,14 @@ UINT16 GetPercentNoiseVolume( OBJECTTYPE * pObj )
 	return (mod > 0) ? mod : 0;
 }
 
+BOOLEAN IsGunSilenced( OBJECTTYPE * pObj )
+{
+	if ( !pObj || pObj->exists() == false || Item[pObj->usItem].usItemClass != IC_GUN )
+		return FALSE;
+
+	return ( GetPercentNoiseVolume( pObj ) < gGameExternalOptions.gubMaxPercentNoiseSilencedSound || Weapon[pObj->usItem].ubAttackVolume <= 10 );
+}
+
 
 INT8 FindGasMask( SOLDIERTYPE * pSoldier )
 {

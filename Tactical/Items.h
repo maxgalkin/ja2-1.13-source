@@ -463,6 +463,8 @@ BOOLEAN IsDuckbill( OBJECTTYPE * pObj );
 // Snap: Returns CUMULATIVE noise volume modifier, with component status factored in.
 // Noise volume is then calculated as volume * GetPercentNoiseVolume / 100
 UINT16 GetPercentNoiseVolume( OBJECTTYPE * pObj );
+// ja2mod 2026-09-24: the test PlayWeaponSound uses to pick the silenced report, so "silenced" means one thing everywhere
+BOOLEAN IsGunSilenced( OBJECTTYPE * pObj );
 
 INT16 GetBulletSpeedBonus( OBJECTTYPE * pObj );
 INT8 FindGasMask( SOLDIERTYPE * pSoldier );

@@ -2864,6 +2864,9 @@ void LoadSkillTraitsExternalSettings()
 	// Flugente: COVERT OPS
 	gSkillTraitValues.sCOMeleeCTHBonus						= iniReader.ReadInteger("Covert Ops","COVERT_MELEE_CTH_BONUS", 40, 0, 200);
 	gSkillTraitValues.sCoMeleeInstakillBonus				= iniReader.ReadInteger("Covert Ops","COVERT_MELEE_INSTAKILL_BONUS", 35, 0, 200);
+	// ja2mod 2026-09-24: silenced sneak shots (BulletImpact)
+	gSkillTraitValues.ubCOSilencedCriticalHitChance		= iniReader.ReadInteger("Covert Ops","COVERT_SILENCED_CRITICAL_HIT_CHANCE", 20, 0, 100);
+	gSkillTraitValues.ubCOSilencedCriticalHitMultiplier	= iniReader.ReadInteger("Covert Ops","COVERT_SILENCED_CRITICAL_HIT_MULTIPLIER", 3, 1, 10);
 	gSkillTraitValues.sCODisguiseAPReduction				= iniReader.ReadInteger("Covert Ops","COVERT_DISGUISE_PERCENT_AP_REDUCTION", 20, 0, 50);
 	gSkillTraitValues.sCOCloseDetectionRange				= iniReader.ReadInteger("Covert Ops","COVERT_CLOSE_DETECTION_RANGE", 10, 0, 100);
 	gSkillTraitValues.sCOCloseDetectionRangeSoldierCorpse	= iniReader.ReadInteger("Covert Ops","COVERT_CLOSE_DETECTION_RANGE_SOLDIER_CORPSE", 5, 0, 100);

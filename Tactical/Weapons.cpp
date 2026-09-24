@@ -8493,6 +8493,28 @@ INT32 BulletImpact( SOLDIERTYPE *pFirer, BULLET *pBullet, SOLDIERTYPE * pTarget,
 			}
 		}
 
+		// ja2mod 2026-09-24: a single shot from a silenced gun by one of our soldiers is a stealth attack as well: same
+		// conditions as the knife rule above, the Covert Ops trait instead of Throwing, a tunable multiplier instead of x4
+		if ( pFirer && pFirer->bTeam == OUR_TEAM && !fFragment && Item[usAttackingWeapon].usItemClass == IC_GUN
+			&& pFirer->bWeaponMode == WM_NORMAL && pFirer->aiData.bOppList[ pTarget->ubID ] == SEEN_CURRENTLY
+			&& IsGunSilenced( pFirer->GetUsedWeapon( &pFirer->inv[pFirer->ubAttackingHand] ) ) )
+		{
+			if ( pTarget->aiData.bOppList[ pFirer->ubID ] == NOT_HEARD_OR_SEEN && pTarget->aiData.bAlertStatus < STATUS_RED
+				&& !CREATURE_OR_BLOODCAT( pTarget ) && !( pTarget->flags.uiStatusFlags & ( SOLDIER_VEHICLE | SOLDIER_ROBOT ) )
+				&& ( ubHitLocation == AIM_SHOT_HEAD || ubHitLocation == AIM_SHOT_TORSO ) )
+			{
+				INT32 iCritChance = sHitBy + NUM_SKILL_TRAITS( pFirer, COVERT_NT ) * gSkillTraitValues.ubCOSilencedCriticalHitChance;
+
+				if ( iCritChance > 0 && PreRandom( 100 ) < (UINT32)iCritChance )
+				{
+					iImpact *= gSkillTraitValues.ubCOSilencedCriticalHitMultiplier;
+					iImpactForCrits = iImpact;
+
+					ScreenMsg( FONT_MCOLOR_LTYELLOW, MSG_INTERFACE, szCovertTextStr[STR_COVERT_SILENCED_CRITICAL], pFirer->GetName( ) );
+				}
+			}
+		}
+
 		if (iImpactForCrits > 0 && iImpactForCrits < pTarget->stats.bLife && !(pTarget->flags.uiStatusFlags & SOLDIER_MONSTER) && !(pTarget->flags.uiStatusFlags & SOLDIER_VEHICLE) && (!(gTacticalStatus.uiFlags & GODMODE) || pTarget->bTeam != OUR_TEAM))
 		{
 			UINT32 uiCritChance = 0;

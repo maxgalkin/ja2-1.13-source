@@ -2261,6 +2261,8 @@ typedef struct
 	// COVERT OPS
 	INT16	sCOMeleeCTHBonus;
 	INT16	sCoMeleeInstakillBonus;
+	UINT8	ubCOSilencedCriticalHitChance;
+	UINT8	ubCOSilencedCriticalHitMultiplier;
 	INT16	sCODisguiseAPReduction;
 	INT16	sCOCloseDetectionRange;
 	INT16	sCOCloseDetectionRangeSoldierCorpse;

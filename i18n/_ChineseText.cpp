@@ -9158,6 +9158,7 @@ STR16	szCovertTextStr[]=
 	L"敌军精英士兵不认识%s！", //L"An elite soldier did not recognize %s!",
 	L"敌军所知的%s不是军队里的！", //L"A officer knew %s was unfamiliar!",
 	L"%s cannot disguise now - an enemy has seen %s recently."	// TODO.Translate,
+	L"%s's silenced shot finds a vital spot."	// TODO.Translate,
 };
 
 STR16	szCorpseTextStr[]=

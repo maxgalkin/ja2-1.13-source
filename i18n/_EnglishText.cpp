@@ -9158,6 +9158,7 @@ STR16	szCovertTextStr[]=
 	L"An elite soldier did not recognize %s!",
 	L"A officer knew %s was unfamiliar!",
 	L"%s cannot disguise now - an enemy has seen %s recently.",
+	L"%s's silenced shot finds a vital spot.",
 };
 
 STR16	szCorpseTextStr[]=

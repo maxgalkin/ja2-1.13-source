@@ -150,3 +150,22 @@ stays silent. Nothing in the savegame format changes.
 | 2026-09-24 | `i18n/include/Text.h` | `STR_COVERT_SEEN_NO_DISGUISE` added to the covert text ids. |
 | 2026-09-24 | `i18n/_EnglishText.cpp`, `i18n/_GermanText.cpp`, `i18n/_RussianText.cpp` | The new line of `szCovertTextStr`, translated. |
 | 2026-09-24 | `i18n/_ChineseText.cpp`, `i18n/_DutchText.cpp`, `i18n/_FrenchText.cpp`, `i18n/_ItalianText.cpp`, `i18n/_PolishText.cpp` | The same line in English, marked `TODO.Translate` like the neighbouring covert strings. |
+
+### Silenced sneak shot
+
+Stock `BulletImpact` has a stealth rule for thrown knives only: a hit on a target that has
+not detected the attacker (`NOT_HEARD_OR_SEEN`, alert status below red) on head or torso
+rolls `sHitBy + Throwing bonus` percent for a x4 damage critical. The same rule now applies
+to a single shot (`WM_NORMAL`) from a silenced gun fired by a soldier of the player's team,
+with the Covert Ops trait in the role of Throwing and its own multiplier. Enemy soldiers,
+assassins included, do not get it. Creatures, vehicles and robots cannot be critted.
+"Silenced" is the sound code's own test (`PlayWeaponSound`): remaining noise below
+`MAX_PERCENT_NOISE_SILENCED_SOUND` or an attack volume of 10 or less. Nothing in the
+savegame format changes.
+
+| Date | File | Change |
+| --- | --- | --- |
+| 2026-09-24 | `Tactical/Weapons.cpp` | `BulletImpact`: the silenced-gun stealth critical next to the knife rule; chance `sHitBy + COVERT_SILENCED_CRITICAL_HIT_CHANCE` per Covert Ops level, damage times `COVERT_SILENCED_CRITICAL_HIT_MULTIPLIER`, message `STR_COVERT_SILENCED_CRITICAL`. |
+| 2026-09-24 | `Tactical/Items.cpp`, `Tactical/Items.h` | `IsGunSilenced`. |
+| 2026-09-24 | `Ja2/GameSettings.cpp`, `Ja2/GameSettings.h` | `ubCOSilencedCriticalHitChance` (default 20, 0-100) and `ubCOSilencedCriticalHitMultiplier` (default 3, 1-10) read from `Skills_Settings.INI [Covert Ops]`; a stock INI without the keys gets the defaults. |
+| 2026-09-24 | `i18n/include/Text.h`, `i18n/_*Text.cpp` | `STR_COVERT_SILENCED_CRITICAL`; English, German and Russian translated, the rest English with `TODO.Translate`. |
