@@ -132,3 +132,21 @@ to help because it lives inside `HandleSoldierAI`. Nothing in the savegame forma
 | --- | --- | --- |
 | 2026-09-23 | `Utils/Timer Control.cpp` | `ResetJA2ClockGlobalTimers` (called by `LoadSavedGame` right after it restores the clock) ends any AI pause with `UnPauseAI` and re-bases `giRTAILastUpdateTime`, the realtime AI cadence stamp, which had the same shape. |
 | 2026-09-23 | `Tactical/Overhead.cpp` | `ExecuteOverhead`: a pause stamp that lies ahead of the clock ends the pause instead of extending it, so the stall cannot recur through any other path that moves the clock backwards. |
+
+### Disguise refusal message
+
+`ApplyCovert` grants the disguise only when no living, conscious enemy has the merc in his
+opponent list within the last three turns (`EnemySeenSoldierRecently`, up to
+`SEEN_3_TURNS_AGO`; in realtime the list ages one step every 20 game seconds). Stock 1.13
+refuses silently: the uniform is put on, no covert flag is set and nothing is said, so the
+same set of clothes appears to work at random. The player-facing paths now say why. The
+automatic re-disguise path (dead code in stock, `fCOStripIfUncovered` is hard-wired `TRUE`)
+stays silent. Nothing in the savegame format changes.
+
+| Date | File | Change |
+| --- | --- | --- |
+| 2026-09-24 | `Tactical/Soldier Control.cpp` | `ApplyCovert`: when the disguise is refused because an enemy saw the merc recently, and the caller asked for messages, `STR_COVERT_SEEN_NO_DISGUISE` goes to the message log. `Disguise` takes `aWithMessage` and passes it on; the skill menu's "Disguise" action passes `TRUE`. |
+| 2026-09-24 | `Tactical/Soldier Control.h` | `Disguise( BOOLEAN aWithMessage = FALSE )`. |
+| 2026-09-24 | `i18n/include/Text.h` | `STR_COVERT_SEEN_NO_DISGUISE` added to the covert text ids. |
+| 2026-09-24 | `i18n/_EnglishText.cpp`, `i18n/_GermanText.cpp`, `i18n/_RussianText.cpp` | The new line of `szCovertTextStr`, translated. |
+| 2026-09-24 | `i18n/_ChineseText.cpp`, `i18n/_DutchText.cpp`, `i18n/_FrenchText.cpp`, `i18n/_ItalianText.cpp`, `i18n/_PolishText.cpp` | The same line in English, marked `TODO.Translate` like the neighbouring covert strings. |

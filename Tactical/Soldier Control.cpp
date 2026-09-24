@@ -16310,7 +16310,7 @@ void	SOLDIERTYPE::LooseDisguise( void )
 	}
 }
 
-void SOLDIERTYPE::Disguise()
+void SOLDIERTYPE::Disguise( BOOLEAN aWithMessage )
 {
 	// this will only work with the new trait system
 	if (!gGameOptions.fNewTraitSystem)
@@ -16328,7 +16328,7 @@ void SOLDIERTYPE::Disguise()
 	if ( this->usSoldierFlagMask2 & SOLDIER_COVERT_NOREDISGUISE )
 		return;
 
-	ApplyCovert( FALSE );
+	ApplyCovert( aWithMessage );
 }
 
 void	SOLDIERTYPE::ApplyCovert( BOOLEAN aWithMessage )
@@ -16370,6 +16370,11 @@ void	SOLDIERTYPE::ApplyCovert( BOOLEAN aWithMessage )
 				if ( aWithMessage && this->bTeam == OUR_TEAM )
 					ScreenMsg( FONT_MCOLOR_LTYELLOW, MSG_INTERFACE, szCovertTextStr[STR_COVERT_DISGUISED_AS_CIVILIAN], this->GetName( ) );
 			}
+		}
+		else if ( aWithMessage && this->bTeam == OUR_TEAM )
+		{
+			// the player asked for a disguise and did not get one - without a reason the refusal looks random
+			ScreenMsg( FONT_MCOLOR_LTYELLOW, MSG_INTERFACE, szCovertTextStr[STR_COVERT_SEEN_NO_DISGUISE], this->GetName( ), this->GetName( ) );
 		}
 		
 		// reevaluate sight - otherwise we could hide by changing clothes in plain sight!
@@ -18297,7 +18302,7 @@ BOOLEAN SOLDIERTYPE::UseSkill( UINT8 iSkill, INT32 usMapPos, UINT32 ID )
 		break;
 
 	case SKILLS_DISGUISE_APPLY_DISGUISE:
-		this->Disguise();
+		this->Disguise( TRUE );
 		this->SpySelfTest();
 		return TRUE;
 

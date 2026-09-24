@@ -9167,6 +9167,7 @@ STR16	szCovertTextStr[]=
 	L"%s tried to manipulate %s's inventory.",
 	L"An elite soldier did not recognize %s!",	// TODO.Translate
 	L"A officer knew %s was unfamiliar!",
+	L"%s cannot disguise now - an enemy has seen %s recently."	// TODO.Translate,
 };
 
 STR16	szCorpseTextStr[]=

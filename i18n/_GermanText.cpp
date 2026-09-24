@@ -9010,6 +9010,7 @@ STR16	szCovertTextStr[]=
 	L"%s hat versucht, %s's Azsrüstung zu verändern.",
 	L"Einem Elitesoldat schien %s verdächtig!",
 	L"Ein Offizier hat %s erkannt!",
+	L"%s kann sich jetzt nicht verkleiden - ein Feind hat %s vor kurzem gesehen.",
 };
 
 STR16	szCorpseTextStr[]=

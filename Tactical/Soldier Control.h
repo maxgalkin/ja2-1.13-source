@@ -1901,7 +1901,7 @@ public:
 	void		LooseDisguise( void );	
 
 	// sevenfm: auto disguise if have correct clothes
-	void		Disguise();
+	void		Disguise( BOOLEAN aWithMessage = FALSE );
 
 	void		ApplyCovert(BOOLEAN aWithMessage);
 

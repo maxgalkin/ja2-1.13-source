@@ -9157,6 +9157,7 @@ STR16	szCovertTextStr[]=
 	L"%s在试图调整%s的装备物品。", //L"%s tried to manipulate %s's inventory.",
 	L"敌军精英士兵不认识%s！", //L"An elite soldier did not recognize %s!",
 	L"敌军所知的%s不是军队里的！", //L"A officer knew %s was unfamiliar!",
+	L"%s cannot disguise now - an enemy has seen %s recently."	// TODO.Translate,
 };
 
 STR16	szCorpseTextStr[]=
