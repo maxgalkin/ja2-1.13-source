@@ -206,3 +206,22 @@ everything off. Game behaviour, save format and data files are unchanged.
 | 2026-09-28 | `TacticalAI/Movement.cpp` | `goto` scope in `InternalGoAsFarAsPossibleTowards`. |
 | 2026-09-28 | `Tactical/PATHAI.cpp` | `FindBestPath`: `flood` scope for `COPYREACHABLE`/`COPYREACHABLE_AND_APS`, `path` otherwise. |
 | 2026-09-28 | `Tactical/LOS.cpp` | `los` (`LineOfSightTest`), `ctgt` (`ChanceToGetThrough`) scopes, armed only inside a decision. |
+
+### AI decision log is opt-in (stock performance bug fix)
+
+The tactical-AI performance log (previous section) showed a flat ~160 ms in every enemy
+decision that no measured routine explained, independent of the number of enemies and
+present even for a civilian in green: 170 of 240 s of AI time in a 30-minute fight. It was
+sevenfm's decision log. `DebugAI( AI_MSG_*, ... )` in `TacticalAI/AIMain.cpp`, called from
+some 150 places in `DecideAction.cpp` alone, did `fopen`/`fputs`/`fclose` twice per message
+(`Logs\AI_Decisions.txt` and `Logs\AI_Decisions [id].txt`) in release builds whenever the
+`Logs` folder existed, which it does in the installed game; `gfLogsEnabled` was `TRUE` by
+default. The log is now off unless `Ja2.ini [Ja2 Settings] AI_DECISION_LOG = 1`, and when
+on it keeps one handle open for the session (flushed per message) and writes the main file
+only; the per-soldier files are gone (every line begins with `[id]`). `Logs\QuestInfo.txt`
+is behind the same switch, as before. No change to what the AI decides.
+
+| Date | File | Change |
+| --- | --- | --- |
+| 2026-09-28 | `TacticalAI/AIMain.cpp` | `gfLogsEnabled` defaults to `FALSE`; `DebugAI( INT8, SOLDIERTYPE*, STR, INT8 )` writes through a session-long `gpAIDecisionsFile` with `fflush`, no per-soldier file; `InitAI` closes the handle before removing the file (`CloseAIDecisionsLog`). |
+| 2026-09-28 | `sgp/sgp.cpp` | `GetRuntimeSettings`: `gfLogsEnabled` from `AI_DECISION_LOG` (default 0). |

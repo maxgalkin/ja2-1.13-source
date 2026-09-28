@@ -210,7 +210,24 @@ STR szAction[] = {
 // sevenfm
 UINT32 guiAIStartCounter = 0, guiAILastCounter = 0;
 //UINT8 gubAISelectedSoldier = NOBODY;
-BOOLEAN gfLogsEnabled = TRUE;
+// ja2mod: was TRUE. Every DebugAI( AI_MSG_*, ... ) message then cost two fopen/fclose
+// pairs (Logs\AI_Decisions.txt and a per-soldier file) in release builds whenever the
+// Logs folder existed, about 5 ms per message and ~160 ms per AI decision: 70 % of the
+// tactical AI's time in a fight with 20 enemies (docs/features/ai-decision-log.md in the
+// ja2mod repo). Now off unless Ja2.ini [Ja2 Settings] AI_DECISION_LOG = 1, set in
+// GetRuntimeSettings( ) (sgp/sgp.cpp); when on, the log keeps one handle open.
+BOOLEAN gfLogsEnabled = FALSE;
+static FILE* gpAIDecisionsFile = NULL;	// ja2mod: Logs\AI_Decisions.txt, open for the session while logging
+
+// ja2mod: InitAI( ) removes the file, which needs the handle closed first.
+static void CloseAIDecisionsLog( )
+{
+	if ( gpAIDecisionsFile != NULL )
+	{
+		fclose( gpAIDecisionsFile );
+		gpAIDecisionsFile = NULL;
+	}
+}
 
 void DebugAI( INT8 bMsgType, SOLDIERTYPE *pSoldier, STR szOutput, INT8 bAction )
 {
@@ -284,35 +301,27 @@ void DebugAI( INT8 bMsgType, SOLDIERTYPE *pSoldier, STR szOutput, INT8 bAction )
 
 	DebugMsg(TOPIC_DECISIONS, DBG_LEVEL_3, szOutput);
 
-	if ((DebugFile = fopen("Logs\\AI_Decisions.txt", "a+t")) != NULL)
+	// ja2mod: one handle kept open for the session, flushed per message so a crash keeps
+	// the decision in progress, instead of fopen/fputs/fclose per message. The per-soldier
+	// files (Logs\AI_Decisions [id].txt) are gone; every line starts with [id], filter on it.
+	if (gpAIDecisionsFile == NULL)
 	{
-		if (bMsgType == AI_MSG_START)
+		gpAIDecisionsFile = fopen("Logs\\AI_Decisions.txt", "a+t");
+		if (gpAIDecisionsFile == NULL)
 		{
-			fputs("\n", DebugFile);
+			// cannot open file in Logs folder, stop logging
+			gfLogsEnabled = FALSE;
+			return;
 		}
-		fputs(msg, DebugFile);
-		fputs("\n", DebugFile);
-		fclose(DebugFile);
 	}
-	else
+	DebugFile = gpAIDecisionsFile;
+	if (bMsgType == AI_MSG_START)
 	{
-		// cannot open file in Logs folder, stop logging
-		gfLogsEnabled = FALSE;
-		return;
-	}
-
-	// also log to individual file for selected soldier
-	sprintf(buf, "Logs\\AI_Decisions [%d].txt", pSoldier->ubID);
-	if ((DebugFile = fopen(buf, "a+t")) != NULL)
-	{
-		if (bMsgType == AI_MSG_START)
-		{
-			fputs("\n", DebugFile);
-		}
-		fputs(msg, DebugFile);
 		fputs("\n", DebugFile);
-		fclose(DebugFile);
 	}
+	fputs(msg, DebugFile);
+	fputs("\n", DebugFile);
+	fflush(DebugFile);
 }
 
 extern	UINT32			guiDay;
@@ -386,6 +395,7 @@ BOOLEAN InitAI( void )
 #endif
 
 	// sevenfm: Clear the AI debug txt file to prevent it from getting huge
+	CloseAIDecisionsLog();	// ja2mod: remove( ) fails on an open file; the next message reopens it
 	remove("Logs\\AI_Decisions.txt");
 	//remove("Logs\\QuestInfo.txt");
 

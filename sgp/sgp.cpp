@@ -50,6 +50,7 @@
 #include "english.h"
 #include "wine.h"
 #include "AIPerf.h"	// ja2mod: AI_PERF_LOG* settings
+extern BOOLEAN gfLogsEnabled;	// ja2mod: TacticalAI/AIMain.cpp, the Logs\AI_Decisions.txt switch
 
 	#include "builddefines.h"
 	#include "Intro.h"
@@ -980,6 +981,10 @@ void GetRuntimeSettings( )
 		oProps.getBoolProperty(L"Ja2 Settings", L"AI_PERF_LOG", true),
 		(UINT32)oProps.getIntProperty(L"Ja2 Settings", L"AI_PERF_LOG_MIN_MS", 5),
 		(UINT32)oProps.getIntProperty(L"Ja2 Settings", L"AI_PERF_LOG_FRAME_MS", 50) );
+
+	// ja2mod: sevenfm's AI decision log (Logs\AI_Decisions.txt, Logs\QuestInfo.txt) is opt-in;
+	// stock wrote it in release builds and it cost ~160 ms per AI decision
+	gfLogsEnabled = oProps.getBoolProperty(L"Ja2 Settings", L"AI_DECISION_LOG", false) ? TRUE : FALSE;
 
 	vfs::Settings::setUseUnicode( !oProps.getBoolProperty(L"Ja2 Settings", L"VFS_NO_UNICODE", false) );
 
