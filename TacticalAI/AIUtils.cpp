@@ -27,6 +27,7 @@
 	#include "SmokeEffects.h"		// sevenfm
 
 #include "GameInitOptionsScreen.h"
+#include "AIPerf.h"	// ja2mod: tactical-AI performance log
 
 //////////////////////////////////////////////////////////////////////////////
 // SANDRO - In this file, all APBPConstants[AP_CROUCH] and APBPConstants[AP_PRONE] were changed to GetAPsCrouch() and GetAPsProne()
@@ -1120,6 +1121,7 @@ INT32 RandDestWithinRange(SOLDIERTYPE *pSoldier)
 
 INT32 ClosestReachableDisturbance(SOLDIERTYPE *pSoldier, BOOLEAN * pfChangeLevel )
 {
+	AIPerf::Scope perfScope( AIPerf::C_DISTURB );	// ja2mod
 	INT32		*psLastLoc, *pusNoiseGridNo;
 	INT8		*pbLastLevel;
 	INT32		sGridNo=-1;
@@ -2069,6 +2071,7 @@ BOOLEAN GuySawEnemy( SOLDIERTYPE * pSoldier, UINT8 ubMax )
 
 INT32 ClosestReachableFriendInTrouble(SOLDIERTYPE *pSoldier, BOOLEAN * pfClimbingNecessary)
 {
+	AIPerf::Scope perfScope( AIPerf::C_FRIEND );	// ja2mod
 	UINT32 uiLoop;
 	INT32 sPathCost, sClosestFriend = NOWHERE, sShortestPath = 1000, sClimbGridNo;
 	BOOLEAN fClimbingNecessary, fClosestClimbingNecessary = FALSE;

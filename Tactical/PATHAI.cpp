@@ -70,6 +70,8 @@ extern BOOLEAN InGasSpot(SOLDIERTYPE *pSoldier, INT32 sGridNo, INT8 bLevel);
 
 //#define PATHAI_SKIPLIST_DEBUG
 
+#include "AIPerf.h"	// ja2mod: tactical-AI performance log
+
 #ifdef PATHAI_VISIBLE_DEBUG
 	#include "video.h"
 
@@ -2165,6 +2167,9 @@ void ShutDownPathAI(void)
 ////////////////////////////////////////////////////////////////////////
 INT32 FindBestPath(SOLDIERTYPE *s , INT32 sDestination, INT8 bLevel, INT16 usMovementMode, INT8 bCopy, UINT8 fFlags )
 {
+	// ja2mod: reachability floods and plain path queries are separate buckets of the AI performance log
+	AIPerf::Scope perfScope( ( bCopy == COPYREACHABLE || bCopy == COPYREACHABLE_AND_APS ) ? AIPerf::C_FLOOD : AIPerf::C_PATH );
+
 	s->sPlotSrcGrid = s->sGridNo;
 
 	if (gGameSettings.fOptions[TOPTION_ALT_PATHFINDING])

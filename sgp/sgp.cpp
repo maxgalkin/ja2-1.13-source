@@ -49,6 +49,7 @@
 #include "connect.h"
 #include "english.h"
 #include "wine.h"
+#include "AIPerf.h"	// ja2mod: AI_PERF_LOG* settings
 
 	#include "builddefines.h"
 	#include "Intro.h"
@@ -973,6 +974,12 @@ void GetRuntimeSettings( )
 	iMaximize = 1;
 	
 	iWindowedMode = bCncDdraw ? 0 : (int)oProps.getIntProperty(L"Ja2 Settings", L"SCREEN_MODE_WINDOWED", -1);
+
+	// ja2mod: tactical-AI performance log (Utils/AIPerf.cpp); defaults keep it on with 5 ms / 50 ms thresholds
+	AIPerf::Configure(
+		oProps.getBoolProperty(L"Ja2 Settings", L"AI_PERF_LOG", true),
+		(UINT32)oProps.getIntProperty(L"Ja2 Settings", L"AI_PERF_LOG_MIN_MS", 5),
+		(UINT32)oProps.getIntProperty(L"Ja2 Settings", L"AI_PERF_LOG_FRAME_MS", 50) );
 
 	vfs::Settings::setUseUnicode( !oProps.getBoolProperty(L"Ja2 Settings", L"VFS_NO_UNICODE", false) );
 

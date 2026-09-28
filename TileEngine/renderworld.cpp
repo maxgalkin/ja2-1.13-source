@@ -23,6 +23,7 @@
 	#include "LogicalBodyTypes/BodyTypeDB.h"
 
 #include "Utilities.h"
+#include "AIPerf.h"	// ja2mod: tactical-AI performance log
 
 UINT32 guiShieldGraphic = 0;
 BOOLEAN fShieldGraphicInit = FALSE;
@@ -3144,6 +3145,8 @@ void RenderWorld( )
 TILE_ELEMENT					*TileElem;
 TILE_ANIMATION_DATA		*pAnimData;
 UINT32 cnt = 0;
+
+	AIPerf::Scope renderScope( AIPerf::C_RENDER );	// ja2mod: frame-level bucket of the AI performance log
 
 	gfRenderFullThisFrame = FALSE;
 

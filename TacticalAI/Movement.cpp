@@ -15,6 +15,7 @@
 	#include "Render Fun.h"
 	#include "Soldier Functions.h"		// added by Flugente
 #include "connect.h"
+#include "AIPerf.h"	// ja2mod: tactical-AI performance log
 //forward declarations of common classes to eliminate includes
 class OBJECTTYPE;
 class SOLDIERTYPE;
@@ -431,6 +432,7 @@ INT8 RandomPointPatrolAI(SOLDIERTYPE *pSoldier)
 
 INT32 InternalGoAsFarAsPossibleTowards(SOLDIERTYPE *pSoldier, INT32 sDesGrid, INT16 bReserveAPs, INT8 bAction, INT8 fFlags )
 {
+	AIPerf::Scope perfScope( AIPerf::C_GOTO );	// ja2mod
 #ifdef DEBUGDECISIONS
  STR16 tempstr;
 #endif

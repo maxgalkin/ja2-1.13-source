@@ -27,6 +27,7 @@
 	#include "GameSettings.h"
 	#include "Soldier Profile.h"
 	#include "Rotting Corpses.h"	// sevenfm
+	#include "AIPerf.h"			// ja2mod: tactical-AI performance log
 
 
 ////////////////////////////////////////////////////////////////////////////////////////////////////////
@@ -277,6 +278,7 @@ INT8 CalcBestCTGT( SOLDIERTYPE *pSoldier, UINT8 ubOppID, INT32 sOppGridNo, INT8 
 INT32 CalcCoverValue(SOLDIERTYPE *pMe, INT32 sMyGridNo, INT32 iMyThreat, INT32 iMyAPsLeft,
 					UINT32 uiThreatIndex, INT32 iRange, INT32 morale, INT32 *iTotalScale)
 {
+	AIPerf::Scope perfScope( AIPerf::C_CALCCOVER );	// ja2mod
 	DebugMsg(TOPIC_JA2AI,DBG_LEVEL_3,String("CalcCoverValue"));
 
 	// all 32-bit integers for max. speed
@@ -614,6 +616,7 @@ UINT8 NumberOfTeamMatesAdjacent( SOLDIERTYPE * pSoldier, INT32 sGridNo )
 
 INT32 FindBestNearbyCover(SOLDIERTYPE *pSoldier, INT32 morale, INT32 *piPercentBetter)
 {
+	AIPerf::Scope perfScope( AIPerf::C_COVER );	// ja2mod
 	DebugMsg(TOPIC_JA2AI,DBG_LEVEL_3,String("FindBestNearbyCover"));
 
 	// all 32-bit integers for max. speed
@@ -1217,6 +1220,7 @@ INT32 FindBestNearbyCover(SOLDIERTYPE *pSoldier, INT32 morale, INT32 *piPercentB
 
 INT32 FindSpotMaxDistFromOpponents(SOLDIERTYPE *pSoldier)
 {
+	AIPerf::Scope perfScope( AIPerf::C_MAXDIST );	// ja2mod
 	INT32	sGridNo;
 	INT32	sBestSpot = NOWHERE;
 	UINT32	uiLoop;
@@ -1519,6 +1523,7 @@ INT32 FindSpotMaxDistFromOpponents(SOLDIERTYPE *pSoldier)
 
 INT32 FindNearestUngassedLand(SOLDIERTYPE *pSoldier)
 {
+	AIPerf::Scope perfScope( AIPerf::C_UNGASSED );	// ja2mod
 	INT32 sGridNo, sClosestLand = NOWHERE, sPathCost, sShortestPath = 1000;
 	INT16 sMaxLeft, sMaxRight, sMaxUp, sMaxDown, sXOffset, sYOffset;
 	INT32 iSearchRange, iIgnoreRange = 0;
@@ -1657,6 +1662,7 @@ INT32 FindNearestUngassedLand(SOLDIERTYPE *pSoldier)
 
 INT32 FindNearbyDarkerSpot(SOLDIERTYPE *pSoldier)
 {
+	AIPerf::Scope perfScope( AIPerf::C_DARKER );	// ja2mod
 	INT32 sGridNo, sClosestSpot = NOWHERE, sPathCost;
 	INT32	iSpotValue, iBestSpotValue = 1000;
 	INT16 sMaxLeft, sMaxRight, sMaxUp, sMaxDown, sXOffset, sYOffset;
@@ -1827,6 +1833,7 @@ INT32 FindNearbyDarkerSpot(SOLDIERTYPE *pSoldier)
 
 INT8 SearchForItems( SOLDIERTYPE * pSoldier, INT8 bReason, UINT16 usItem )
 {
+	AIPerf::Scope perfScope( AIPerf::C_ITEMS );	// ja2mod
 	DebugMsg(TOPIC_JA2AI,DBG_LEVEL_3,String("SearchForItems"));
 	DebugAI(AI_MSG_INFO, pSoldier, String("SearchForItems [%d] bReason %d usItem %d", pSoldier->ubID, bReason, usItem));
 
@@ -2619,6 +2626,7 @@ INT32 FindNearestOpenableNonDoor( INT32 sStartGridNo )
 
 INT32 FindFlankingSpot(SOLDIERTYPE *pSoldier, INT32 sPos, INT8 bAction )
 {
+	AIPerf::Scope perfScope( AIPerf::C_FLANK );	// ja2mod
 	INT32 sGridNo;
 	INT32 sBestSpot = NOWHERE;
 	INT32 iSearchRange = 8;	// sevenfm: increase search range
@@ -2840,6 +2848,7 @@ INT32 FindFlankingSpot(SOLDIERTYPE *pSoldier, INT32 sPos, INT8 bAction )
 //sevenfm: new calculation using FindHeigherLevel
 INT32 FindClosestClimbPoint (SOLDIERTYPE *pSoldier, BOOLEAN fClimbUp )
 {
+	AIPerf::Scope perfScope( AIPerf::C_CLIMB );	// ja2mod
 	INT32 sBestSpot = NOWHERE;
 
 	// sevenfm: safety check
@@ -3094,6 +3103,7 @@ INT32 FindNearestPassableSpot( INT32 sGridNo, UINT8 usSearchRadius )
 
 INT32 FindAdvanceSpot(SOLDIERTYPE *pSoldier, INT32 sTargetSpot, INT8 bAction, UINT8 ubType, BOOLEAN fUnlimited)
 {
+	AIPerf::Scope perfScope( AIPerf::C_ADVANCE );	// ja2mod
 	INT32	sGridNo, sRealGridNo;
 	INT32	sBestSpot = NOWHERE;
 	INT32	iSearchRange = min(AI_PATHCOST_RADIUS, MAX_TILES_MOVE_TURN);
@@ -3371,6 +3381,7 @@ INT32 FindAdvanceSpot(SOLDIERTYPE *pSoldier, INT32 sTargetSpot, INT8 bAction, UI
 // find spot with cover, max dist from opponents
 INT32 FindRetreatSpot(SOLDIERTYPE *pSoldier)
 {
+	AIPerf::Scope perfScope( AIPerf::C_RETREAT );	// ja2mod
 	INT32	sGridNo;
 	INT32	sBestSpot = NOWHERE;
 	INT32	iSearchRange = MAX_TILES_MOVE_TURN;

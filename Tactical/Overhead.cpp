@@ -162,6 +162,7 @@ void UpdateFastForwardMode(SOLDIERTYPE* pSoldier, INT8 bAction); // sevenfm: to 
 extern UINT8    gubAICounter;
 
 #include "fresh_header.h"
+#include "AIPerf.h"	// ja2mod: tactical-AI performance log
 #define RT_DELAY_BETWEEN_AI_HANDLING 50
 #define RT_AI_TIMESLICE 10
 
@@ -934,6 +935,8 @@ BOOLEAN ExecuteOverhead( )
     if( !COUNTERDONE( TOVERHEAD ) )
         return TRUE; // FIXME: return value is ignored and should be void
     RESETCOUNTER( TOVERHEAD );
+
+    AIPerf::Scope overheadScope( AIPerf::C_OVERHEAD ); // ja2mod: frame-level bucket of the AI performance log
 
     UINT32                          cnt;
     SOLDIERTYPE*                    pSoldier;

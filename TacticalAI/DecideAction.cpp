@@ -34,6 +34,7 @@
 #include "Exit Grids.h"		// added by Flugente
 #include "Game Clock.h"		// sevenfm
 #include "SkillCheck.h"		// sevenfm
+#include "AIPerf.h"			// ja2mod: tactical-AI performance log
 
 //////////////////////////////////////////////////////////////////////////////
 // SANDRO - In this file, all APBPConstants[AP_CROUCH] and APBPConstants[AP_PRONE] were changed to GetAPsCrouch() and GetAPsProne()
@@ -690,6 +691,7 @@ INT8 DecideActionNamedNPC( SOLDIERTYPE * pSoldier )
 
 INT8 DecideActionGreen(SOLDIERTYPE *pSoldier)
 {
+	AIPerf::Scope perfScope( AIPerf::C_GREEN );	// ja2mod
 	DOUBLE iChance, iSneaky = 10;
 	INT8  bInWater, bInDeepWater, bInGas;
 #ifdef DEBUGDECISIONS
@@ -1543,6 +1545,7 @@ INT8 DecideActionGreen(SOLDIERTYPE *pSoldier)
 
 INT8 DecideActionYellow(SOLDIERTYPE *pSoldier)
 {
+	AIPerf::Scope perfScope( AIPerf::C_YELLOW );	// ja2mod
 	INT32 iDummy;
 	UINT8 ubNoiseDir;
 	INT32 sNoiseGridNo;
@@ -2447,6 +2450,7 @@ INT8 DecideActionYellow(SOLDIERTYPE *pSoldier)
 
 INT8 DecideActionRed(SOLDIERTYPE *pSoldier)
 {
+	AIPerf::Scope perfScope( AIPerf::C_RED );	// ja2mod
 	INT8	bActionReturned;
 	INT32	iDummy;
 	INT32	iChance;
@@ -4889,6 +4893,7 @@ BOOLEAN SoldierCondFalse(SOLDIERTYPE *pSoldier)			{ return FALSE; }
 
 INT8 DecideActionBlack(SOLDIERTYPE *pSoldier)
 {
+	AIPerf::Scope perfScope( AIPerf::C_BLACK );	// ja2mod
 	INT32	iCoverPercentBetter, iOffense, iDefense, iChance;
 	INT32	sClosestOpponent = NOWHERE,sBestCover = NOWHERE;//dnl ch58 160813
  INT32	sClosestDisturbance;

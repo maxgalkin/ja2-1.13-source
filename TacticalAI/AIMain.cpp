@@ -55,6 +55,7 @@
 #include "Plan.h"
 #include "PlanFactoryLibrary.h"
 #include "AbstractPlanFactory.h"
+#include "AIPerf.h"	// ja2mod: tactical-AI performance log
 
 #ifdef JA2UB
 #include "Ja25_Tactical.h"
@@ -406,6 +407,8 @@ BOOLEAN AimingGun(SOLDIERTYPE *pSoldier)
 
 void HandleSoldierAI( SOLDIERTYPE *pSoldier ) // FIXME - this function is named inappropriately
 {
+	AIPerf::DecisionScope decisionScope( pSoldier );	// ja2mod: times this call and logs it when slow
+
 	// ATE
 	// Bail if we are engaged in a NPC conversation/ and/or sequence ... or we have a pause because 
 	// we just saw someone... or if there are bombs on the bomb queue

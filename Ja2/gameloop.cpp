@@ -50,6 +50,7 @@
 
 //network headers
 #include "connect.h"
+#include "AIPerf.h"	// ja2mod: per-frame timing for the tactical-AI performance log
 
 UINT32 guiCurrentScreen;
 UINT32 guiPendingScreen = NO_PENDING_SCREEN;
@@ -243,6 +244,8 @@ void GameLoop(void)
 	POINT		MousePos;
 	UINT32		uiOldScreen=guiCurrentScreen;
 	clock_t		startTime = clock(); // decrease CPU load patch from defrog
+
+	AIPerf::BeginFrame( );	// ja2mod: frame timing, closed after RefreshScreen below
 
 	if(_LeftButtonDown | _RightButtonDown)//dnl ch77 191113 to prevent memory corruption during resize
 		ResizeWorldItems();
@@ -460,10 +463,15 @@ void GameLoop(void)
 	if( gfSkipFrame )
 		gfSkipFrame = FALSE;
 	else
+	{
 		// end rain
 
 		//DebugMsg (TOPIC_JA2,DBG_LEVEL_3,"GameLoop: refresh screen");
+		AIPerf::Scope refreshScope( AIPerf::C_REFRESH );	// ja2mod
 		RefreshScreen( NULL );
+	}
+
+	AIPerf::EndFrame( );	// ja2mod: logs the frame when it was slower than AI_PERF_LOG_FRAME_MS
 
 	guiGameCycleCounter++;
 

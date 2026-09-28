@@ -34,6 +34,7 @@
 
 // anv: for enemy taunts
 #include "Civ Quotes.h"
+#include "AIPerf.h"	// ja2mod: tactical-AI performance log
 
 extern INT16 DirIncrementer[8];
 
@@ -165,6 +166,7 @@ void ResetWeaponMode( SOLDIERTYPE * pSoldier )
 
 void CalcBestShot(SOLDIERTYPE *pSoldier, ATTACKTYPE *pBestShot)
 {
+	AIPerf::Scope perfScope( AIPerf::C_SHOT );	// ja2mod
 	UINT32 uiLoop;
 	INT32 iAttackValue, iThreatValue, iHitRate, iBestHitRate, iPercentBetter, iEstDamage, iTrueLastTarget;
 	UINT16 usTrueState, usTurningCost, usRaiseGunCost;	
@@ -837,6 +839,7 @@ BOOLEAN CloseEnoughForGrenadeToss( INT32 sGridNo, INT32 sGridNo2 )
 
 void CalcBestThrow(SOLDIERTYPE *pSoldier, ATTACKTYPE *pBestThrow)
 {
+	AIPerf::Scope perfScope( AIPerf::C_THROW );	// ja2mod
 	DebugMsg (TOPIC_JA2,DBG_LEVEL_3,"calcbestthrow");
 	// September 9, 1998: added code for LAWs (CJC)
 	UINT8	ubLoop, ubLoop2;
@@ -1712,6 +1715,7 @@ void CalcBestThrow(SOLDIERTYPE *pSoldier, ATTACKTYPE *pBestThrow)
 
 void CalcBestStab(SOLDIERTYPE *pSoldier, ATTACKTYPE *pBestStab, BOOLEAN fBladeAttack )
 {
+	AIPerf::Scope perfScope( AIPerf::C_STAB );	// ja2mod
 	UINT32 uiLoop;
 	INT32 iAttackValue;
 	INT32 iThreatValue,iHitRate,iBestHitRate,iPercentBetter, iEstDamage;

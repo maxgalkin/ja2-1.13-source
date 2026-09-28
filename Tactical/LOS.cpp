@@ -54,6 +54,7 @@
 #include "ai.h"					// sevenfm
 #include "GameInitOptionsScreen.h"
 #include "renderworld.h"		// added by Flugente for SetRenderFlags( RENDER_FLAG_FULL );
+#include "AIPerf.h"			// ja2mod: tactical-AI performance log
 
 //forward declarations of common classes to eliminate includes
 class OBJECTTYPE;
@@ -1280,6 +1281,8 @@ BOOLEAN ResolveHitOnWall( STRUCTURE * pStructure, INT32 iGridNo, INT8 bLOSIndexX
 */
 INT32 LineOfSightTest( FLOAT dStartX, FLOAT dStartY, FLOAT dStartZ, FLOAT dEndX, FLOAT dEndY, FLOAT dEndZ, int iTileSightLimit, INT8 bAware, BOOLEAN fSmell, INT32 * psWindowGridNo, bool adjustForSight = true, bool cthCalc = false )
 {
+	AIPerf::Scope perfScope( AIPerf::C_LOS );	// ja2mod: armed only inside an AI decision
+
 	// Parameters...
 	// the X,Y,Z triplets should be obvious
 	// TileSightLimit is the max # of tiles of distance visible
@@ -6918,6 +6921,7 @@ INT8 FireBulletGivenTarget_NoObjectNoSoldier( UINT16 usItem, UINT8 ammotype, UIN
 
 INT8 ChanceToGetThrough(SOLDIERTYPE * pFirer, FLOAT dEndX, FLOAT dEndY, FLOAT dEndZ)
 {
+	AIPerf::Scope perfScope( AIPerf::C_CTGT );	// ja2mod: armed only inside an AI decision
 	OBJECTTYPE* pObjHand = pFirer->GetUsedWeapon(&(pFirer->inv[pFirer->ubAttackingHand]));
 
 	// sevenfm: check that weapon exists!

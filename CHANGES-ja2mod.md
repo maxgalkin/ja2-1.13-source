@@ -169,3 +169,40 @@ savegame format changes.
 | 2026-09-24 | `Tactical/Items.cpp`, `Tactical/Items.h` | `IsGunSilenced`. |
 | 2026-09-24 | `Ja2/GameSettings.cpp`, `Ja2/GameSettings.h` | `ubCOSilencedCriticalHitChance` (default 20, 0-100) and `ubCOSilencedCriticalHitMultiplier` (default 3, 1-10) read from `Skills_Settings.INI [Covert Ops]`; a stock INI without the keys gets the defaults. |
 | 2026-09-24 | `i18n/include/Text.h`, `i18n/_*Text.cpp` | `STR_COVERT_SILENCED_CRITICAL`; English, German and Russian translated, the rest English with `TODO.Translate`. |
+
+### Tactical-AI performance log
+
+Frame-rate stalls in sectors with many enemies are the tactical AI running on the game's
+only thread: `ExecuteOverhead` calls `HandleSoldierAI` for every soldier of the active
+team each frame in turn-based combat, and nothing in the engine said which routine the
+time went to. The fork now times each `HandleSoldierAI` call together with the routines
+it runs (the four `DecideAction*` levels, the cover, flank, advance and retreat searches,
+the best shot/throw/stab evaluations, reachability floods and path queries in
+`FindBestPath`, `LineOfSightTest`, `ChanceToGetThrough`, `CalcCoverValue`) and each
+`GameLoop` iteration (overhead, render, screen refresh), and appends the slow ones to
+`ja2mod-aiperf.log` in the user profile folder: one `decision` line per AI call slower than
+`AI_PERF_LOG_MIN_MS` (soldier, team, class, grid, alert level before and after, action
+chosen, sector, men per team, then `<routine>=<calls>/<ms>` for every routine that ran),
+one `frame` line per iteration slower than `AI_PERF_LOG_FRAME_MS`, one `turn` summary per
+team turn. Times are `QueryPerformanceCounter` and inclusive (a `red` decision contains its
+`cover` search, which contains its `flood` and `los` calls). Outside an AI decision the
+LOS/path/cover scopes cost one branch; `AI_PERF_LOG=0` in `Ja2.ini [Ja2 Settings]` turns
+everything off. Game behaviour, save format and data files are unchanged.
+
+| Date | File | Change |
+| --- | --- | --- |
+| 2026-09-28 | `Utils/AIPerf.h`, `Utils/AIPerf.cpp` | Added. Counter table, `DecisionScope`/`Scope` RAII timers, frame and turn accumulators, the `ja2mod-aiperf.log` writer (own `sgp::Logger` id, append mode, opened on first line); `Configure` takes the three `Ja2.ini` keys. |
+| 2026-09-28 | `Utils/CMakeLists.txt` | Compiles `AIPerf.cpp`. |
+| 2026-09-28 | `sgp/sgp.cpp` | `GetRuntimeSettings`: reads `AI_PERF_LOG` (default 1), `AI_PERF_LOG_MIN_MS` (5), `AI_PERF_LOG_FRAME_MS` (50) from `Ja2.ini [Ja2 Settings]`. |
+| 2026-09-28 | `Ja2/gameloop.cpp` | `GameLoop`: `BeginFrame`/`EndFrame` around the iteration, `refresh` scope around `RefreshScreen`. |
+| 2026-09-28 | `Tactical/Overhead.cpp` | `ExecuteOverhead`: `overhead` scope after the `TOVERHEAD` counter check. |
+| 2026-09-28 | `TileEngine/renderworld.cpp` | `RenderWorld`: `render` scope. |
+| 2026-09-28 | `Tactical/TeamTurns.cpp` | `EndTurn`: `TurnEnded` writes the turn summary for `gTacticalStatus.ubCurrentTeam`. |
+| 2026-09-28 | `TacticalAI/AIMain.cpp` | `HandleSoldierAI`: `DecisionScope`. |
+| 2026-09-28 | `TacticalAI/DecideAction.cpp` | `green`/`yellow`/`red`/`black` scopes in the four `DecideAction*`. |
+| 2026-09-28 | `TacticalAI/FindLocations.cpp` | `calccover`, `cover`, `maxdist`, `ungassed`, `darker`, `items`, `flank`, `climb`, `advance`, `retreat` scopes. |
+| 2026-09-28 | `TacticalAI/Attacks.cpp` | `shot`, `throw`, `stab` scopes. |
+| 2026-09-28 | `TacticalAI/AIUtils.cpp` | `disturb` (`ClosestReachableDisturbance`), `friend` (`ClosestReachableFriendInTrouble`) scopes. |
+| 2026-09-28 | `TacticalAI/Movement.cpp` | `goto` scope in `InternalGoAsFarAsPossibleTowards`. |
+| 2026-09-28 | `Tactical/PATHAI.cpp` | `FindBestPath`: `flood` scope for `COPYREACHABLE`/`COPYREACHABLE_AND_APS`, `path` otherwise. |
+| 2026-09-28 | `Tactical/LOS.cpp` | `los` (`LineOfSightTest`), `ctgt` (`ChanceToGetThrough`) scopes, armed only inside a decision. |

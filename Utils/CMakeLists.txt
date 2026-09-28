@@ -1,4 +1,5 @@
 set(UtilsSrc
+"${CMAKE_CURRENT_SOURCE_DIR}/AIPerf.cpp" # ja2mod: tactical-AI performance log
 "${CMAKE_CURRENT_SOURCE_DIR}/Animated ProgressBar.cpp"
 "${CMAKE_CURRENT_SOURCE_DIR}/Cinematics Bink.cpp"
 "${CMAKE_CURRENT_SOURCE_DIR}/Cinematics.cpp"

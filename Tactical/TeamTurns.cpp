@@ -56,6 +56,7 @@
 class OBJECTTYPE;
 class SOLDIERTYPE;
 #include "connect.h"
+#include "AIPerf.h"	// ja2mod: tactical-AI performance log
 
 extern INT8 STRAIGHT;
 //extern UINT8 gubSpeedUpAnimationFactor;
@@ -303,6 +304,8 @@ void EndTurn( UINT8 ubNextTeam )
 	DebugMsg (TOPIC_JA2INTERRUPT,DBG_LEVEL_3,"EndTurn");
 	SOLDIERTYPE * pSoldier;
 	INT32 cnt;
+
+	AIPerf::TurnEnded( gTacticalStatus.ubCurrentTeam );	// ja2mod: per-turn summary line of the AI performance log
 
 	//Check for enemy pooling (add enemies if there happens to be more than the max in the
 	//current battle.	If one or more slots have freed up, we can add them now.
