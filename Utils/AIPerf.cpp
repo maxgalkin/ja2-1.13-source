@@ -65,7 +65,8 @@ namespace
 	INT64			giFreq = 0;
 
 	int				giDepth = 0;			// DecisionScope nesting
-	bool			gfLogOpen = false;
+	bool			gfLogOpen = false;		// logger id taken; the file itself is created on the first line
+	bool			gfHeaderWritten = false;
 	sgp::Logger_ID	gLogId = 0;
 
 	Accum			gDecision;				// counters of the current outermost decision
@@ -103,14 +104,24 @@ namespace
 		return (INT64)uiMs * giFreq / 1000;
 	}
 
+	// Takes a logger id so its timer (the [seconds] prefix of every line) runs
+	// from startup like game_log.log's; vfs::Log opens the file on the first write.
+	void OpenLog( )
+	{
+		if ( gfLogOpen )
+			return;
+		sgp::Logger& logger = sgp::Logger::instance( );
+		gLogId = logger.createLogger( );
+		logger.connectFile( gLogId, L"ja2mod-aiperf.log", true, sgp::Logger::FLUSH_ON_ENDL );
+		gfLogOpen = true;
+	}
+
 	void Write( const char* pLine )
 	{
-		sgp::Logger& logger = sgp::Logger::instance( );
-		if ( !gfLogOpen )
+		OpenLog( );
+		if ( !gfHeaderWritten )
 		{
-			gLogId = logger.createLogger( );
-			logger.connectFile( gLogId, L"ja2mod-aiperf.log", true, sgp::Logger::FLUSH_ON_ENDL );
-			gfLogOpen = true;
+			gfHeaderWritten = true;
 
 			char head[192];
 			_snprintf( head, sizeof( head ), "AIPerf start min_decision_ms=%u min_frame_ms=%u qpc_hz=%I64d",
@@ -227,6 +238,8 @@ void AIPerf::Configure( BOOLEAN fEnabled, UINT32 uiMinDecisionMs, UINT32 uiMinFr
 	gDecision.Reset( );
 	gFrame.Reset( );
 	ResetTurn( );
+	if ( gfEnabled )
+		OpenLog( );
 }
 
 void AIPerf::BeginFrame( )
